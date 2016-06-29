@@ -23,8 +23,8 @@ class Exercise
   # reps - The number of reps for each set
   #
   # Returns true if successfully added, false otherwise
-  def add_exercise(weight, sets, reps)
-    if weight < 0 || set < 0 || reps < 0
+  def add_wsr(weight, sets, reps)
+    if weight < 0 || sets < 0 || reps < 0
       puts "Negative number in entry"
       return false
     end
@@ -33,6 +33,34 @@ class Exercise
   end
 
   # Public: Delete a WSR that contains the respective information.
+  #
+  # weight - The weight for the WSR to be deleted
+  # sets - The number of sets for the WSR to be deleted
+  # reps - The number of reps for the WSR to be deleted
+  #
+  # Returns true if the removal was successful, false otherwise
+  def remove_wsr(weight, sets, reps)
+    wsr_to_check = WSR.new(weight, sets, reps)
+    if @volume.include? wsr_to_check
+      @volume.delete(wsr_to_check)
+      return true
+    else
+      return false
+    end
+  end
+
+  # Public: The string representation for the exercise, given by its name
+  # in capitals followed by each WSR on a new line.
+  def to_s
+    result = name.split.map(&:capitalize).join(' ')
+    result << "\n"
+    sorted_weight = @volume.to_a.sort_by { |wsr| wsr.weight }.reverse!
+    sorted_weight.each do |wsr|
+      result << wsr.to_s
+      result << "\n"
+    end
+    return result
+  end
 end
 
 # Public: A WSR is a container of information for some exercise, where WSR
@@ -66,10 +94,13 @@ class WSR
 
   # Public: The equals method, where two WSRs are defined as equal iff
   # they have the same weight, sets, and reps numbers.
-  def ==(other)
+  def eql?(other)
     return self.class === other && @weight == other.weight &&
       @sets == other.sets && @reps == other.reps
   end
 
-  alias eql? ==
+  # Public: The string representation of the WSR
+  def to_s
+    return "#{@weight}x#{@sets}x#{@reps}"
+  end
 end
