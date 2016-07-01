@@ -1,4 +1,5 @@
 # !/usr/bin/ruby
+# TODO Implement ability to change an exercise's weight/sets/reps given name
 # Public: Class containing information on a single workout.
 class Workout
   # Public: The number of seconds in a day in order to calculate the
@@ -19,16 +20,20 @@ class Workout
     @exercises = Hash.new
   end
 
-  # Public: Initializes the workout, setting the date based on how many
-  # days ago the workout occured, and with exercises as empty.
+  # Public: Sets the day of the workout if the data inputted was not
+  # on the day of the actual workout. Calculates this by subtracting
+  # days from the current time
   #
   # days_ago - The number of days that have passed since the user did
   # the workout in order to set the workout to the correct day
   #
-  # TODO include assertion during user input that days_ago is an int
-  def initialize(days_ago)
+  # Returns true if successful date switch, false otherwise.
+  def set_date(days_ago)
+    if !(days_ago is_a? Integer)
+      puts "Error in calculating date."
+      return false
     @date = Time.now - (days_ago * SECONDS_IN_DAY)
-    @exercises = Hash.new
+    return true
   end
 
   # Public: Adds a new exercise into the set of exercises
@@ -43,5 +48,20 @@ class Workout
     end
     @exercises[exercise.name.to_sym] = exercise
     return true
+  end
+
+  # Public: Deletes a given exercise from the workout
+  #
+  # exercise_name - The name of the exercise to be deleted
+  #
+  # Returns true if the exercise is successfully deleted, false otherwise
+  def delete_exercise(exercise_name)
+    exercise_name.downcase!
+    if !(@exercises.key? exercise_name.to_sym)
+      return false
+    else
+      @exercises.delete(exercise_name.to_sym)
+      return true
+    end
   end
 end
