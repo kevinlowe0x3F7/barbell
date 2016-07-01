@@ -27,11 +27,13 @@ class Workout
   # days_ago - The number of days that have passed since the user did
   # the workout in order to set the workout to the correct day
   #
+  # TODO Include asking about days ago in parsing
   # Returns true if successful date switch, false otherwise.
   def set_date(days_ago)
     if !(days_ago is_a? Integer)
       puts "Error in calculating date."
       return false
+    end
     @date = Time.now - (days_ago * SECONDS_IN_DAY)
     return true
   end
@@ -62,6 +64,37 @@ class Workout
     else
       @exercises.delete(exercise_name.to_sym)
       return true
+    end
+  end
+
+  # Public: Modifies an exercise from the workout by manipulating
+  # a single WSR in the exercise. The WSR in question must be specific
+  # and precise because a contains check is used for modification.
+  # This does not add or delete an entire exercise.
+  #
+  # exercise_name - The name of the exercise to be modified
+  # weight - The weight of the WSR for modification
+  # sets - The # of sets of the WSR for modification
+  # reps - The # of reps of the WSR for modification
+  # option - Whether one is trying to add a new WSR or delete, given
+  #          as a String: "add" or "delete"
+  # 
+  # Returns true if the modification was successful, false otherwise
+  def modify_exercise(exercise_name, weight, sets, reps, option)
+    exercise_name.downcase!
+    if !(@exercises.key? exercise_name.to_sym)
+      return false
+    end
+    exercise = @exercises[exercise_name.to_sym]
+    if option.eql? "add"
+      is_success = exercise.add_wsr(weight, sets, reps)
+      return is_success
+    elsif option.eql? "delete"
+      is_success = exercise.remove_wsr(weight, sets, reps)
+      return is_success
+    else
+      puts "Invalid option"
+      return false
     end
   end
 end

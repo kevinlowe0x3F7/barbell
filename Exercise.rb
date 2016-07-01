@@ -45,6 +45,7 @@ class Exercise
       @volume.delete(wsr_to_check)
       return true
     else
+      puts "Could not find given weight x sets x reps"
       return false
     end
   end
