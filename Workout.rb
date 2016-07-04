@@ -10,21 +10,19 @@ class Workout
   # Public: The date that the workout occurred.
   attr_reader :date
   # Public: The set of exercises that the user did. Each exercise is a
-  #         dictionary entry with the form:
-  #         :name of exercise => Exercise object
+  # dictionary entry with the form: name of exercise => Exercise object
   attr_reader :exercises
   # Public: The name of the workout. By default it will be 'Workout'
-  #         combined with the date that the workout is created. If a
-  #         template is used, it will be the name of the template plus
-  #         the date.
+  # combined with the date that the workout is created. If a template
+  # is used, it will be the name of the template plus the date.
   attr_reader :name
 
   # Public: Initializes the workout, setting the date as the date that this
   # object is created and with exercises as empty
-  def initialize(name="Workout ")
+  def initialize(name="Workout")
     @date = Time.now
     @exercises = Hash.new
-    @name = name + @date.strftime("%m-%d-%Y")
+    @name = "#{name} #{@date.strftime("%m-%d-%Y")}"
   end
 
   # Public: Sets the day of the workout if the data inputted was not
@@ -52,7 +50,7 @@ class Workout
   #
   # Returns true if the exercise is successfully added, false otherwise
   def add_exercise(exercise)
-    if exercise.nil? || !(exercise.is_a? Exercise)
+    if exercise.nil? || !(exercise.respond_to? 'add_wsr')
       puts "Error in entering exercise" 
       return false
     end

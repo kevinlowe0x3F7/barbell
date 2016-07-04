@@ -22,10 +22,12 @@ class Template
   #
   # Returns true if successful, false otherwise
   def add_exercise(name)
-    if !(name.is_a? String)
+    if !(name.respond_to? 'downcase')
       puts "Error with name, please make sure it is a String."
       return false
-    elsif @exercises.include? name
+    end
+    name.downcase!
+    if @exercises.include? name
       puts "Name already in template"
       return false
     else
