@@ -13,12 +13,18 @@ class Workout
   #         dictionary entry with the form:
   #         :name of exercise => Exercise object
   attr_reader :exercises
+  # Public: The name of the workout. By default it will be 'Workout'
+  #         combined with the date that the workout is created. If a
+  #         template is used, it will be the name of the template plus
+  #         the date.
+  attr_reader :name
 
   # Public: Initializes the workout, setting the date as the date that this
   # object is created and with exercises as empty
-  def initialize
+  def initialize(name="Workout ")
     @date = Time.now
     @exercises = Hash.new
+    @name = name + @date.strftime("%m-%d-%Y")
   end
 
   # Public: Sets the day of the workout if the data inputted was not
@@ -36,6 +42,7 @@ class Workout
       return false
     end
     @date = Time.now - (days_ago * SECONDS_IN_DAY)
+    @name = name + @date.strftime("%m-%d-%Y")
     return true
   end
 
