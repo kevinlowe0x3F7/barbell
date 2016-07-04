@@ -2,6 +2,7 @@
 
 require 'set'
 # Public: Class containing information on one individual workout.
+# TODO Save data for personal record
 class Exercise
   # Public: The name of the exercise.
   attr_accessor :name

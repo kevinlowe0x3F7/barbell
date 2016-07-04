@@ -1,5 +1,6 @@
 # !/usr/bin/ruby
-# TODO Implement ability to change an exercise's weight/sets/reps given name
+
+require './Exercise.rb'
 # Public: Class containing information on a single workout.
 class Workout
   # Public: The number of seconds in a day in order to calculate the
@@ -96,5 +97,13 @@ class Workout
       puts "Invalid option"
       return false
     end
+  end
+
+  # Public: The string representation for the workout, including each
+  # exercise one by one
+  def to_s
+    result = ""
+    @exercises.each { |name, exercise| result << exercise.to_s }
+    return result
   end
 end
