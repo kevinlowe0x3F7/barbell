@@ -60,6 +60,12 @@ class User
       puts "Error in adding template"
       return false
     else
+      @templates.each do |t|
+        if t.name.eql? template.name
+          puts "Template name: #{template.name} already present"
+          return false
+        end
+      end
       @templates << template
       return true
     end
@@ -79,4 +85,34 @@ class User
       return true
     end
   end
+
+  # Public: Delete a template based on the name
+  #
+  # Returns true for a successful deletion, false otherwise
+  def delete_template(template_name)
+    @templates.each do |t|
+      if t.name.eql? template_name
+        @templates.delete(t)
+        return true
+      end
+    end
+    puts "Template not found"
+    return false
+  end
+
+  # Public: Delete a workout based on the index in the list.
+  #
+  # index - The index for the workout to be deleted
+  #
+  # Returns true for a successful deletion, false otherwise
+  def delete_workout(index)
+    result = @worouts.delete_at(index)
+    if result.nil?
+      puts "Workout not found"
+      return false
+    else
+      return true
+    end
+  end
+
 end
