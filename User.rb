@@ -114,5 +114,4 @@ class User
       return true
     end
   end
-
 end
