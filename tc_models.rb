@@ -2,8 +2,11 @@
 
 require 'test/unit'
 require 'stringio'
+require 'fileutils'
 require './Exercise.rb'
 require './Workout.rb'
+require './Template.rb'
+require './User.rb'
 
 class TestModels < Test::Unit::TestCase
   def setup
@@ -14,6 +17,8 @@ class TestModels < Test::Unit::TestCase
 
   def teardown
     $stdout = @previous_stdout
+    if File.exist? './.fitness'
+      FileUtils.remove_dir('./.fitness')
   end
 
   def test_exercise_and_wsr_adding
@@ -134,5 +139,35 @@ class TestModels < Test::Unit::TestCase
     
     assert(workout1.modify_exercise("deadlift", 275, 3, 5, 'delete'))
     assert(workout1.modify_exercise("deadlift", 275, 1, 5, 'add'))
+
+    assert(!(workout1.modify_exercise("deadlift", 285, 1, 3, nil)))
+    assert_equal("Null argument\n", $stdout.string)
+  end
+
+  def test_template
+    template = Template.new("Workout A")
+    template.add_exercise("squat")
+    template.add_exercise("squat")
+    assert_equal("Name already in template\n", $stdout.string)
+    $stdout.reopen("")
+    template.add_exercise("bench press")
+    template.add_exercise("bent-over rows")
+
+    assert("squat".eql? template.exercises[0])
+    assert("bench press".eql? template.exercises[1])
+    assert("bent-over rows".eql? template.exercises[2])
+
+    assert_equal("Workout A\nSquat\nBench Press\nBent-over Rows\n",\
+                 template.to_s)
+  end
+
+  def test_user
+    user = User.new
+    assert(File.exist? './.fitness')
+    # TODO adding template test (error case)
+    # TODO adding workout test (error case)
+    # TODO deleting workout test (error case)
+    # TODO deleting template (error case)
+    # TODO serializing and deserializing
   end
 end

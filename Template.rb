@@ -22,7 +22,7 @@ class Template
   #
   # Returns true if successful, false otherwise
   def add_exercise(name)
-    if !(name.respond_to? 'downcase')
+    if name.nil? || !(name.respond_to? 'downcase')
       puts "Error with name, please make sure it is a String."
       return false
     end
@@ -34,5 +34,18 @@ class Template
       @exercises << name
       return true
     end
+  end
+
+  # Public: Return the string representation of this template, which is
+  # simply the name of the template plus each exercise in order with
+  # a new line for each.
+  def to_s
+    result = @name.split.map(&:capitalize).join(' ')
+    result << "\n"
+    @exercises.each do |exercise|
+      result << exercise.split.map(&:capitalize).join(' ')
+      result << "\n"
+    end
+    return result
   end
 end

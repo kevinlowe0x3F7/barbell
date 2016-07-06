@@ -54,7 +54,7 @@ class Exercise
   # Public: The string representation for the exercise, given by its name
   # in capitals followed by each WSR on a new line.
   def to_s
-    result = name.split.map(&:capitalize).join(' ')
+    result = @name.split.map(&:capitalize).join(' ')
     result << "\n"
     sorted_weight = @volume.to_a.sort_by { |wsr| wsr.weight }.reverse!
     sorted_weight.each do |wsr|
