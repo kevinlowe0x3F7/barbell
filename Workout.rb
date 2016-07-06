@@ -35,12 +35,12 @@ class Workout
   # TODO Include asking about days ago in parsing
   # Returns true if successful date switch, false otherwise.
   def set_date(days_ago)
-    if !(days_ago is_a? Integer)
+    if !(days_ago.is_a? Integer)
       puts "Error in calculating date."
       return false
     end
     @date = Time.now - (days_ago * SECONDS_IN_DAY)
-    @name = name + @date.strftime("%m-%d-%Y")
+    @name = "#{name[0, name.rindex(' ')]} #{@date.strftime("%m-%d-%Y")}"
     return true
   end
 
@@ -64,8 +64,13 @@ class Workout
   #
   # Returns true if the exercise is successfully deleted, false otherwise
   def delete_exercise(exercise_name)
+    if exercise_name.nil?
+      puts "Null argument for exercise name"
+      return false
+    end
     exercise_name.downcase!
     if !(@exercises.key? exercise_name.to_sym)
+      puts "Exercise not found"
       return false
     else
       @exercises.delete(exercise_name.to_sym)
@@ -87,6 +92,10 @@ class Workout
   # 
   # Returns true if the modification was successful, false otherwise
   def modify_exercise(exercise_name, weight, sets, reps, option)
+    if exercise_name.nil? || option.nil?
+      puts "Null argument"
+      return false
+    end
     exercise_name.downcase!
     if !(@exercises.key? exercise_name.to_sym)
       return false
