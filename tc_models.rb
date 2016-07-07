@@ -19,6 +19,7 @@ class TestModels < Test::Unit::TestCase
     $stdout = @previous_stdout
     if File.exist? './.fitness'
       FileUtils.remove_dir('./.fitness')
+    end
   end
 
   def test_exercise_and_wsr_adding
@@ -163,11 +164,24 @@ class TestModels < Test::Unit::TestCase
 
   def test_user
     user = User.new
-    assert(File.exist? './.fitness')
-    # TODO adding template test (error case)
-    # TODO adding workout test (error case)
-    # TODO deleting workout test (error case)
-    # TODO deleting template (error case)
-    # TODO serializing and deserializing
+    assert(File.exist?('./.fitness'))
+    workout_a = Template.new("Workout A")
+    workout_AA = Template.new("workout a")
+    workout_a.add_exercise("squat")
+    workout_a.add_exercise("bench press")
+    workout_a.add_exercise("bent-over rows")
+    assert(user.add_template(workout_a))
+    assert(!(user.add_template(3)))
+    assert_equal("Error in adding template\n", $stdout.string)
+    $stdout.reopen("")
+    assert(!(user.add_template(workout_AA)))
+    assert_equal("Template name: 'workout a' already present\n", $stdout.string)
+    $stdout.reopen("")
+
+  # TODO adding template test (error case)
+  # TODO adding workout test (error case)
+  # TODO deleting workout test (error case)
+  # TODO deleting template (error case)
+  # TODO serializing and deserializing
   end
 end

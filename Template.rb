@@ -12,6 +12,7 @@ class Template
   #
   # name - The name to use for this template. Lowercased for consistency
   def initialize(name)
+    name.downcase!
     @name = name
     @exercises = Array.new
   end

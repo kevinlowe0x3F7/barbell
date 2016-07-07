@@ -56,13 +56,13 @@ class User
   #
   # Returns true for a successful add, false otherwise.
   def add_template(template)
-    if !(template.respond_to? 'add_exercise')
+    if template.nil? || !(template.respond_to? 'add_exercise')
       puts "Error in adding template"
       return false
     else
       @templates.each do |t|
         if t.name.eql? template.name
-          puts "Template name: #{template.name} already present"
+          puts "Template name: '#{template.name}' already present"
           return false
         end
       end
