@@ -77,7 +77,7 @@ class User
   #
   # Returns true for a successful add, false otherwise
   def add_workout(workout)
-    if !(workout.respond_to? 'set_date')
+    if workout.nil? || !(workout.respond_to? 'set_date')
       puts "Error in adding workout"
       return false
     else
@@ -90,6 +90,10 @@ class User
   #
   # Returns true for a successful deletion, false otherwise
   def delete_template(template_name)
+    if template_name.nil? || !(template_name.respond_to? 'downcase')
+      return false
+    end
+    template_name.downcase!
     @templates.each do |t|
       if t.name.eql? template_name
         @templates.delete(t)
@@ -106,7 +110,7 @@ class User
   #
   # Returns true for a successful deletion, false otherwise
   def delete_workout(index)
-    result = @worouts.delete_at(index)
+    result = @workouts.delete_at(index)
     if result.nil?
       puts "Workout not found"
       return false

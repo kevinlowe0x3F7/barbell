@@ -113,7 +113,7 @@ class TestModels < Test::Unit::TestCase
     assert_equal("Exercise not found\n", $stdout.string)
     $stdout.reopen("")
     assert(!(workout1.delete_exercise(nil)))
-    assert_equal("Null argument for exercise name\n", $stdout.string)
+    assert_equal("Error in deleting exercise\n", $stdout.string)
   end
 
   def test_workout_modifying
@@ -177,11 +177,23 @@ class TestModels < Test::Unit::TestCase
     assert(!(user.add_template(workout_AA)))
     assert_equal("Template name: 'workout a' already present\n", $stdout.string)
     $stdout.reopen("")
+    assert(!(user.delete_template('workout b')))
+    assert_equal("Template not found\n", $stdout.string)
+    $stdout.reopen("")
+    assert(user.delete_template('workout A'))
 
-  # TODO adding template test (error case)
-  # TODO adding workout test (error case)
+    workout = Workout.new("Workout A")
+    assert(!(workout.add_exercise("bench press")))
+    assert_equal("Error in entering exercise\n", $stdout.string)
+    $stdout.reopen("")
+    assert(workout.add_exercise(Exercise.new("bench press")))
+    assert(workout.add_exercise(Exercise.new("squat")))
+    user.add_workout(workout)
+
+    assert(!(user.delete_workout(1)))
+    assert_equal("Workout not found\n", $stdout.string)
+    $stdout.reopen("")
   # TODO deleting workout test (error case)
-  # TODO deleting template (error case)
   # TODO serializing and deserializing
   end
 end

@@ -64,8 +64,8 @@ class Workout
   #
   # Returns true if the exercise is successfully deleted, false otherwise
   def delete_exercise(exercise_name)
-    if exercise_name.nil?
-      puts "Null argument for exercise name"
+    if exercise_name.nil? || !(exercise_name.respond_to? 'downcase')
+      puts "Error in deleting exercise"
       return false
     end
     exercise_name.downcase!
