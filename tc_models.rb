@@ -181,6 +181,7 @@ class TestModels < Test::Unit::TestCase
     assert_equal("Template not found\n", $stdout.string)
     $stdout.reopen("")
     assert(user.delete_template('workout A'))
+    assert_equal(0, user.templates.length)
 
     workout = Workout.new("Workout A")
     assert(!(workout.add_exercise("bench press")))
@@ -193,7 +194,20 @@ class TestModels < Test::Unit::TestCase
     assert(!(user.delete_workout(1)))
     assert_equal("Workout not found\n", $stdout.string)
     $stdout.reopen("")
-  # TODO deleting workout test (error case)
-  # TODO serializing and deserializing
+    assert(user.delete_workout(0))
+    assert_equal(0, user.workouts.length)
+    
+    assert(user.add_workout(workout))
+    assert(user.add_template(workout_a))
+    assert_equal(1, user.templates.length)
+    assert_equal(1, user.workouts.length)
+
+    assert(User.serialize(user))
+
+    serialized_user = User.deserialize
+    assert_equal(1, user.templates.length)
+    assert_equal(workout_a, user.templates[0])
+    assert_equal(1, user.workouts.length)
+    assert_equal(workout, user.workouts[0])
   end
 end
