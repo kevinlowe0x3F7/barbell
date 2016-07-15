@@ -12,15 +12,18 @@ class User
   # Public: Every workout that the user has completed. It is saved
   # as a list to preserve the ordering of workouts.
   attr_accessor :workouts
+  # Public: Boolean flag to allow more extensive help text during sessions.
+  # Enabled by default
+  attr_accessor :more_help
 
   # Public: Initializes a user, creating the metadata files for the user.
   # At this point, it is assumed that there is no other .fitness metadata
   # file so that it can be created freely without worry of overwrite.
-  # TODO Include check of .fitness file in main
   def initialize
     @templates = Array.new
     @workouts = Array.new
     Dir.mkdir('.fitness')
+    @more_help = true
   end
 
   # Public: Serializes a given user using Marshal. The file will be stored
