@@ -9,6 +9,11 @@ require './Template.rb'
 # The script uses a while loop and user input to process data. For usage
 # guide, type 'ruby main.rb help' into the command line.
 
+trap "SIGINT" do
+  puts "Interrupted, no data in the session will be saved"
+  exit 130
+end
+
 # Public: Initializes this program by creating the .fitness folder and
 # setting up any other necessary metadata files
 # Returns true for successful initialization, and false otherwise
@@ -52,8 +57,9 @@ def start(stdin=$stdin)
     success = false
     case choice
     when '1', 'add'
-      success = add_option(user)
+      success = add_option(user, stdin)
     when 'exit', 'quit'
+      User.serialize(user)
       return
     end
   end
@@ -69,8 +75,8 @@ end
 # and false otherwise.
 # TODO implement getting user input for each add operation
 # TODO be able to handle multiple adds inside this one function
-def add_option(user)
-  puts "What would you like to add?"
+# TODO test add_another, can't do it now until add_workout is complete
+def add_option(user, stdin=$stdin)
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
   options.each do |option|
@@ -79,17 +85,60 @@ def add_option(user)
   end
   choice = stdin.gets.chomp
   choice.downcase!
-  case choice
-  when '1', 'workout'
-    puts "adding workout"
-  when '2', 'template'
-    puts "adding template"
-  when '3', 'exercise'
-    puts "adding exercise"
-  when 'exit', 'quit'
-    abort
+  while true
+    puts "What would you like to add?"
+    case choice
+    when '1', 'workout'
+      add_workout(user, stdin)
+      print "Add another workout? (y or n) "
+      add_another = stdin.gets.chomp
+      add_another.downcase!
+      print '\n'
+      if add_another == 'y' || add_another == 'yes'
+        choice = '1'
+      else
+        return
+      end
+    when '2', 'template'
+      puts "adding template"
+    when '3', 'exercise'
+      puts "adding exercise"
+    when 'exit', 'quit'
+      abort
+    else
+      puts "Please choose one of the above options"
+    end
   end
 end
+
+# Public: Grab user input for a workout, given either a template or
+# through freeform entry.
+#
+# user - The user object that is modified
+def add_workout(user, stdin=$stdin)
+  puts "Would you like to use a pre-defined template?"
+  while true
+    choice = stdin.gets.chomp
+    choice.downcase!
+    while true
+      case choice
+      when 'y', 'yes'
+        add_workout_with_template
+        return
+      when 'n', 'no'
+        add_workout_freeform
+        return
+      when 'quit', 'exit'
+        abort
+      else
+        puts "Please choose yes (y) or no (n)"
+        choice = stdin.gets.chomp
+        choice.downcase!
+      end
+    end
+  end
+end
+
 # Public: Displays the help text (user guide) for this program.
 def help
   puts "help text"
