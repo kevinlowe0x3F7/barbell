@@ -28,8 +28,6 @@ def init
 end
 
 # Public: Starts a user session to manipulate or view their entered data
-# TODO Add case for if command doesn't exist
-# TODO Add interrupt issue
 def start(stdin=$stdin)
   begin
     user = User.deserialize
@@ -41,6 +39,39 @@ def start(stdin=$stdin)
       + "exists, otherwise considering restarting."
   end
   puts "Welcome! What would you like to do?"
+  display_options
+  choice = stdin.gets.chomp
+  choice.downcase!
+  while true
+    success = false
+    case choice
+    when '1', 'add'
+      success = add_option(user, stdin)
+      if success
+        puts "What else would you like to do?"
+        display_options
+        choice = stdin.gets.chomp
+        choice.downcase!
+      else
+        puts "Error with adding workout. Try again."
+        puts "What would you like to do?"
+        display_options
+        choice = stdin.gets.chomp
+        choice.downcase!
+      end
+    when 'exit', 'quit'
+      User.serialize(user)
+      return
+    else
+      puts "Please choose one of the above commands."
+      choice = stdin.gets.chomp
+      choice.downcase!
+    end
+  end
+end
+
+# Public: Display all possible user options.
+def display_options
   options = ["Add"]
   option_num = 1
   options.each do |option|
@@ -50,18 +81,6 @@ def start(stdin=$stdin)
   if user.more_help
     puts "For each option, you can type either the number of the option"\
       + ". Example: '1' or 'add' will both lead to the add command."
-  end
-  while true
-    choice = stdin.gets.chomp
-    choice.downcase!
-    success = false
-    case choice
-    when '1', 'add'
-      success = add_option(user, stdin)
-    when 'exit', 'quit'
-      User.serialize(user)
-      return
-    end
   end
 end
 
@@ -74,9 +93,10 @@ end
 # Returns true if the user adds one or more things without any errors,
 # and false otherwise.
 # TODO implement getting user input for each add operation
-# TODO be able to handle multiple adds inside this one function
 # TODO test add_another, can't do it now until add_workout is complete
+# TODO ensure that an empty template can't be added
 def add_option(user, stdin=$stdin)
+  puts "What would you like to add?"
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
   options.each do |option|
@@ -86,18 +106,21 @@ def add_option(user, stdin=$stdin)
   choice = stdin.gets.chomp
   choice.downcase!
   while true
-    puts "What would you like to add?"
     case choice
     when '1', 'workout'
-      add_workout(user, stdin)
-      print "Add another workout? (y or n) "
-      add_another = stdin.gets.chomp
-      add_another.downcase!
-      print '\n'
-      if add_another == 'y' || add_another == 'yes'
-        choice = '1'
+      success = add_workout(user, stdin)
+      if success
+        print "Add another workout? (y or n) "
+        add_another = stdin.gets.chomp
+        add_another.downcase!
+        print '\n'
+        if add_another == 'y' || add_another == 'yes'
+          choice = '1'
+        else
+          return true
+        end
       else
-        return
+        return false
       end
     when '2', 'template'
       puts "adding template"
@@ -107,6 +130,8 @@ def add_option(user, stdin=$stdin)
       abort
     else
       puts "Please choose one of the above options"
+      choice = stdin.gets.chomp
+      choice.downcase!
     end
   end
 end
@@ -115,6 +140,8 @@ end
 # through freeform entry.
 #
 # user - The user object that is modified
+#
+# Returns true for a successful workout add, and false otherwise
 def add_workout(user, stdin=$stdin)
   puts "Would you like to use a pre-defined template?"
   while true
@@ -123,11 +150,49 @@ def add_workout(user, stdin=$stdin)
     while true
       case choice
       when 'y', 'yes'
-        add_workout_with_template
-        return
+        if user.templates.length == 0
+          puts "No templates for user"
+          return false
+        end
+        template = ""
+        while true
+          puts "Choose a template"
+          template_num = 1
+          user.templates.each do |template|
+            printf("%d. %s\n", template_num, template)
+            template_num += 1
+          end
+          template = stdin.gets.chomp
+          template.downcase! 
+          if is_i? template
+            template_index = Integer(template, 10) - 1
+            if template_index > user.templates.length
+              puts "Number out of bounds"
+              next
+            else
+              template = user.templates[template_index]
+              break
+            end
+          elsif user.templates.include? template
+            template_index = 0
+            index = 0
+            user.templates.each do |user_template|
+              if user_template.eql? template
+                template_index = index
+                break
+              end
+            end
+            template = user.templates[template_index]
+            break
+          else
+            puts "Template not found"
+          end
+        end
+        success = add_workout_with_template(user, template)
+        return success
       when 'n', 'no'
-        add_workout_freeform
-        return
+        success = add_workout_freeform(user)
+        return success
       when 'quit', 'exit'
         abort
       else
@@ -137,6 +202,34 @@ def add_workout(user, stdin=$stdin)
       end
     end
   end
+end
+
+# Public: Ask user input for adding a workout with a template included
+#
+# user - The user that is being modified
+# template - A list of exercises that will be used
+#
+# Returns true if workout is successfully added, and false otherwise.
+def add_workout_with_template(user, template)
+end
+
+# Public: Ask user input for adding a workout free form (no template).
+# The primary difference between template and free form is that the
+# free form version will ask for the name of the exercise.
+#
+# user - The user that is being modified
+#
+# Returns true if workout is sucessfully added, and false otherwise.
+def add_workout_freeform(user)
+end
+
+# Public: Checks for whether a passed in string is made up of numbers
+#
+# str - The string that is being checked
+#
+# Returns true if str is made up of solely numbers, false otherwise.
+def is_i?(str)
+  /\A[-+]?\d+\z/ === str
 end
 
 # Public: Displays the help text (user guide) for this program.
