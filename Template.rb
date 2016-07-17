@@ -5,7 +5,7 @@
 class Template
   # Public: A name to reference the template
   attr_accessor :name
-  # Public: The list of exercises in this template
+  # Public: The list of exercises in this template, by their names
   attr_accessor :exercises
 
   # Public: Initializes a template with a given name

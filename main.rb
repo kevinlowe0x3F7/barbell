@@ -136,7 +136,7 @@ def add_option(user, stdin=$stdin)
   end
 end
 
-# Public: Grab user input for a workout, given either a template or
+# Public: Grab user input for a workout, through either a template or
 # through freeform entry.
 #
 # user - The user object that is modified
@@ -210,7 +210,23 @@ end
 # template - A list of exercises that will be used
 #
 # Returns true if workout is successfully added, and false otherwise.
-def add_workout_with_template(user, template)
+# TODO make sure to explain WSR in help text since it's a bit confusing
+# TODO complete the while loop for 'done', next', and 'more'
+def add_workout_with_template(user, template, stdin=$stdin)
+  template.exercises.each do |exercise|
+    wsrs = Array.new
+    puts exercise.split.map(&:capitalize).join(' ')
+    option = 'more'
+    while !(option.eql? 'done')
+      case option
+      when 'next'
+        wsrs << ask_for_wsr
+        puts "More sets, move to next exercise, or done with workout?"
+        if user.more_help
+          puts "Type in 'more', 'next', or 'done'"
+        end
+      end
+  end
 end
 
 # Public: Ask user input for adding a workout free form (no template).
@@ -221,6 +237,47 @@ end
 #
 # Returns true if workout is sucessfully added, and false otherwise.
 def add_workout_freeform(user)
+end
+
+# Public: Asks a user for a weight, set, rep combination.
+def ask_for_wsr(stdin=$stdin)
+  while true
+    print("Enter weight performed (in lbs): ")
+    weight = stdin.gets.chomp
+    if weight.eql? 'exit' || weight.eql? 'quit'
+      abort
+    elsif !(is_i? weight)
+      puts "Not a number, try again"
+    else
+      weight = Integer(weight, 10)
+      break
+    end
+  end
+  while true
+    print("Enter # of sets: ")
+    sets = stdin.gets.chomp
+    if sets.eql? 'exit' || sets.eql? 'quit'
+      abort
+    elsif !(is_i? sets)
+      puts "Not a number, try again"
+    else
+      sets = Integer(sets, 10)
+      break
+    end
+  end
+  while true
+    print("Enter # of reps: ")
+    reps = stdin.gets.chomp
+    if reps.eql? 'exit' || reps.eql? 'quit'
+      abort
+    elsif !(is_i? reps)
+      puts "Not a number, try again"
+    else
+      reps = Integer(reps, 10)
+      break
+    end
+  end
+  return WSR.new(weight, sets, reps)
 end
 
 # Public: Checks for whether a passed in string is made up of numbers
