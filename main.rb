@@ -210,23 +210,61 @@ end
 # template - A list of exercises that will be used
 #
 # Returns true if workout is successfully added, and false otherwise.
-# TODO make sure to explain WSR in help text since it's a bit confusing
-# TODO complete the while loop for 'done', next', and 'more'
+# TODO make sure to explain WSR in help text since it's a bit confusing,
+# specifically regarding the more, next, and done
 def add_workout_with_template(user, template, stdin=$stdin)
-  template.exercises.each do |exercise|
-    wsrs = Array.new
-    puts exercise.split.map(&:capitalize).join(' ')
-    option = 'more'
-    while !(option.eql? 'done')
-      case option
-      when 'next'
-        wsrs << ask_for_wsr
-        puts "More sets, move to next exercise, or done with workout?"
-        if user.more_help
-          puts "Type in 'more', 'next', or 'done'"
-        end
+  proper_template = template.name.split.map(&:capitalize).join(' ')
+  workout = Workout.new(proper_template)
+  wsrs = Array.new
+  exercise_num = 0
+  exercise_name = template[exercise_num]
+  puts template[exercise_num].split.map(&:capitalize).join(' ')
+  curr_exercise = Exercise.new(exercise_name)
+  option = 'more'
+  while !(option.eql? 'done')
+    case option
+    when 'more'
+      wsrs << ask_for_wsr(stdin)
+      puts "More sets, move to next exercise, or done with workout?"
+      if user.more_help
+        puts "Type in 'more', 'next', or 'done'"
       end
+      option = stdin.gets.chomp
+      option.downcase!
+    when 'next'
+      wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+      workout.add_exercise(curr_exercise)
+      exercise_num += 1
+      if exercise_num >= template.length
+        break
+      end
+      exercise_name = template[exercise_num]
+      puts template[exercise_num].split.map(&:capitalize).join(' ')
+      curr_exercise = Exercise.new(exercise_name)
+      wsrs = Array.new
+      option = 'more'
+    when 'exit', 'quit'
+      abort
+    else
+      printf("%s is not a valid command", option)
+      puts "More sets, move to next exercise, or done with workout?"
+      option = stdin.gets.chomp
+      option.downcase!
+    end
   end
+  puts "How many days ago was this workout?"
+  if user.more_help
+    puts "Enter 0 for today, otherwise go by integer values"
+  end
+  days_ago = stdin.gets.chomp
+  while !days_ago.is_i?
+    puts "Not a number, please input an integer"
+    days_ago = stdin.gets.chomp
+  end
+  workout.set_date(Integer(days_ago, 10))
+  user.add_workout(workout)
+  User.serialize(user)
+  return true
 end
 
 # Public: Ask user input for adding a workout free form (no template).
@@ -237,9 +275,12 @@ end
 #
 # Returns true if workout is sucessfully added, and false otherwise.
 def add_workout_freeform(user)
+
 end
 
 # Public: Asks a user for a weight, set, rep combination.
+# 
+# Returns the new WSR given by user input
 def ask_for_wsr(stdin=$stdin)
   while true
     print("Enter weight performed (in lbs): ")
