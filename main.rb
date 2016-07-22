@@ -125,7 +125,19 @@ def add_option(user, stdin=$stdin)
         return false
       end
     when '2', 'template'
-      puts "adding template"
+      success = add_template(user, stdin)
+      if success
+        print "Add another template? (y or n) "
+        add_another = stdin.gets.chomp
+        add_another.downcase!
+        if add_another == 'y' || add_another == 'yes'
+          choice = '2'
+        else
+          return true
+        end
+      else
+        return false
+      end
     when '3', 'exercise'
       puts "adding exercise"
     when 'exit', 'quit'
@@ -143,6 +155,8 @@ end
 #
 # user - The user object that is modified
 #
+# TODO for adding a workout, check if the user already inputted that
+# TODO exercise as a name
 # Returns true for a successful workout add, and false otherwise
 def add_workout(user, stdin=$stdin)
   print "Would you like to use a pre-defined template? "
@@ -268,6 +282,7 @@ def add_workout_with_template(user, template, stdin=$stdin)
   end
   workout.set_date(Integer(days_ago, 10))
   user.add_workout(workout)
+  puts "Workout successfully added! User data saved"
   User.serialize(user)
   return true
 end
@@ -326,7 +341,7 @@ def add_workout_freeform(user, stdin=$stdin)
   end
   workout.set_date(Integer(days_ago, 10))
   user.add_workout(workout)
-  puts "Workout successfully added!"
+  puts "Workout successfully added! User data saved"
   User.serialize(user)
   return true
 end
@@ -383,6 +398,7 @@ def ask_for_wsr(stdin=$stdin)
 end
 
 # Public: Asks a user for an exercise name. Used in freeform workout add
+# and for creating templates
 #
 # Returns the exercise name that the user gives
 def ask_for_exercise(stdin=$stdin)
@@ -394,6 +410,58 @@ def ask_for_exercise(stdin=$stdin)
   else
     return name
   end
+end
+
+# Public: Grab user input for a new template
+#
+# user - The user object that is modified
+#
+# Returns true for a successful workout add, and false otherwise
+def add_template(user, stdin=$stdin)
+  while true
+    print "Name of the new template: "
+    template_name = stdin.gets.chomp
+    template_name.downcase!
+    duplicate = false
+    user.templates.each do |template|
+      if template.name.eql? template_name
+        duplicate = true
+        break
+      end
+    end
+    if duplicate
+      puts "User already has this template name, please choose another"
+    else
+      break
+    end
+  end
+  new_template = Template.new(template_name)
+  choice = 'y'
+  while !choice.eql?('n') && !choice.eql?('no')
+    next_exercise = ask_for_exercise(stdin)
+    if new_template.exercises.include? next_exercise
+      puts "Exercise already in template"
+    else
+      new_template.add_exercise(next_exercise)
+    end
+    while true
+      print "Add another exercise name (y or n)? "
+      choice = stdin.gets.chomp
+      choice.downcase!
+      if choice.eql?('exit') || choice.eql?('quit')
+        abort
+      elsif !choice.eql?('y') && !choice.eql?('yes') && !choice.eql?('n')\
+              && !choice.eql?('no')
+        puts "Please select yes or no"
+      else
+        break
+      end
+    end
+  end
+  user.add_template(new_template)
+  puts "New template added! User data saved."
+  User.serialize(user)
+  return true
 end
 
 # Public: Checks for whether a passed in string is made up of numbers
