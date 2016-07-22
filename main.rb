@@ -38,8 +38,9 @@ def start(stdin=$stdin)
     puts "Error loading user object. Check to see if '.fitness' dir "\
       + "exists, otherwise considering restarting."
   end
-  puts "Welcome! What would you like to do?"
-  display_options
+  puts "Welcome to your command line fitness buddy!"
+  display_options(user)
+  print "What would you like to do? "
   choice = stdin.gets.chomp
   choice.downcase!
   while true
@@ -48,13 +49,13 @@ def start(stdin=$stdin)
     when '1', 'add'
       success = add_option(user, stdin)
       if success
-        puts "What else would you like to do?"
-        display_options
+        display_options(user)
+        print "What else would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       else
         puts "Error with adding workout. Try again."
-        puts "What would you like to do?"
+        print "What would you like to do? "
         display_options
         choice = stdin.gets.chomp
         choice.downcase!
@@ -64,6 +65,7 @@ def start(stdin=$stdin)
       return
     else
       puts "Please choose one of the above commands."
+      print "What would you like to do? "
       choice = stdin.gets.chomp
       choice.downcase!
     end
@@ -71,7 +73,9 @@ def start(stdin=$stdin)
 end
 
 # Public: Display all possible user options.
-def display_options
+#
+# user - The current user
+def display_options(user)
   options = ["Add"]
   option_num = 1
   options.each do |option|
@@ -93,16 +97,15 @@ end
 # Returns true if the user adds one or more things without any errors,
 # and false otherwise.
 # TODO implement getting user input for each add operation
-# TODO test add_another, can't do it now until add_workout is complete
 # TODO ensure that an empty template can't be added
 def add_option(user, stdin=$stdin)
-  puts "What would you like to add?"
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
   options.each do |option|
     printf("%d. %s\n", option_num, option)
     option_num += 1
   end
+  print "What would you like to add? "
   choice = stdin.gets.chomp
   choice.downcase!
   while true
@@ -113,7 +116,6 @@ def add_option(user, stdin=$stdin)
         print "Add another workout? (y or n) "
         add_another = stdin.gets.chomp
         add_another.downcase!
-        print '\n'
         if add_another == 'y' || add_another == 'yes'
           choice = '1'
         else
@@ -129,7 +131,7 @@ def add_option(user, stdin=$stdin)
     when 'exit', 'quit'
       abort
     else
-      puts "Please choose one of the above options"
+      print "Please choose one of the above options: "
       choice = stdin.gets.chomp
       choice.downcase!
     end
@@ -143,7 +145,7 @@ end
 #
 # Returns true for a successful workout add, and false otherwise
 def add_workout(user, stdin=$stdin)
-  puts "Would you like to use a pre-defined template?"
+  print "Would you like to use a pre-defined template? "
   while true
     choice = stdin.gets.chomp
     choice.downcase!
@@ -162,6 +164,7 @@ def add_workout(user, stdin=$stdin)
             printf("%d. %s\n", template_num, template)
             template_num += 1
           end
+          print "Template number: "
           template = stdin.gets.chomp
           template.downcase! 
           if is_i? template
@@ -196,7 +199,7 @@ def add_workout(user, stdin=$stdin)
       when 'quit', 'exit'
         abort
       else
-        puts "Please choose yes (y) or no (n)"
+        print "Please choose yes (y) or no (n): "
         choice = stdin.gets.chomp
         choice.downcase!
       end
@@ -213,6 +216,7 @@ end
 # TODO make sure to explain WSR in help text since it's a bit confusing,
 # specifically regarding the more, next, and done
 def add_workout_with_template(user, template, stdin=$stdin)
+  puts "Adding workout:"
   proper_template = template.name.split.map(&:capitalize).join(' ')
   workout = Workout.new(proper_template)
   wsrs = Array.new
@@ -225,10 +229,10 @@ def add_workout_with_template(user, template, stdin=$stdin)
     case option
     when 'more'
       wsrs << ask_for_wsr(stdin)
-      puts "More sets, move to next exercise, or done with workout?"
       if user.more_help
         puts "Type in 'more', 'next', or 'done'"
       end
+      print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
       option.downcase!
     when 'next'
@@ -252,13 +256,14 @@ def add_workout_with_template(user, template, stdin=$stdin)
       option.downcase!
     end
   end
-  puts "How many days ago was this workout?"
   if user.more_help
     puts "Enter 0 for today, otherwise go by integer values"
   end
+  print "How many days ago was this workout? "
   days_ago = stdin.gets.chomp
   while !days_ago.is_i?
     puts "Not a number, please input an integer"
+    print "How many days ago was this workout? "
     days_ago = stdin.gets.chomp
   end
   workout.set_date(Integer(days_ago, 10))
@@ -274,8 +279,56 @@ end
 # user - The user that is being modified
 #
 # Returns true if workout is sucessfully added, and false otherwise.
-def add_workout_freeform(user)
-
+def add_workout_freeform(user, stdin=$stdin)
+  puts "Adding workout:"
+  workout = Workout.new
+  wsrs = Array.new
+  exercise_name = ask_for_exercise(stdin)
+  puts exercise_name.split.map(&:capitalize).join(' ')
+  curr_exercise = Exercise.new(exercise_name)
+  option = 'more'
+  while !(option.eql? 'done')
+    case option
+    when 'more'
+      wsrs << ask_for_wsr(stdin)
+      if user.more_help
+        puts "Type in 'more', 'next', or 'done'"
+      end
+      print "More sets, move to next exercise, or done with workout? "
+      option = stdin.gets.chomp
+      option.downcase!
+    when 'next'
+      wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+      workout.add_exercise(curr_exercise)
+      exercise_name = ask_for_exercise(stdin)
+      puts exercise_name.split.map(&:capitalize).join(' ')
+      curr_exercise = Exercise.new(exercise_name)
+      wsrs = Array.new
+      option = 'more'
+    when 'exit', 'quit'
+      abort
+    else
+      printf("%s is not a valid command", option)
+      print "More sets, move to next exercise, or done with workout? "
+      option = stdin.gets.chomp
+      option.downcase!
+    end
+  end
+  if user.more_help
+    puts "Enter 0 for today, otherwise go by integer values"
+  end
+  print "How many days ago was this workout? "
+  days_ago = stdin.gets.chomp
+  while !(is_i? days_ago)
+    puts "Not a number, please input an integer"
+    print "How many days ago was this workout? "
+    days_ago = stdin.gets.chomp
+  end
+  workout.set_date(Integer(days_ago, 10))
+  user.add_workout(workout)
+  puts "Workout successfully added!"
+  User.serialize(user)
+  return true
 end
 
 # Public: Asks a user for a weight, set, rep combination.
@@ -285,7 +338,7 @@ def ask_for_wsr(stdin=$stdin)
   while true
     print("Enter weight performed (in lbs): ")
     weight = stdin.gets.chomp
-    if weight.eql? 'exit' || weight.eql? 'quit'
+    if weight.eql?('exit') || weight.eql?('quit')
       abort
     elsif !(is_i? weight)
       puts "Not a number, try again"
@@ -297,28 +350,50 @@ def ask_for_wsr(stdin=$stdin)
   while true
     print("Enter # of sets: ")
     sets = stdin.gets.chomp
-    if sets.eql? 'exit' || sets.eql? 'quit'
+    if sets.eql?('exit') || sets.eql?('quit')
       abort
     elsif !(is_i? sets)
       puts "Not a number, try again"
     else
       sets = Integer(sets, 10)
-      break
+      if sets == 0
+        puts "Error: 0 sets"
+      else
+        break
+      end
     end
   end
   while true
     print("Enter # of reps: ")
     reps = stdin.gets.chomp
-    if reps.eql? 'exit' || reps.eql? 'quit'
+    if reps.eql?('exit') || reps.eql?('quit')
       abort
     elsif !(is_i? reps)
       puts "Not a number, try again"
     else
       reps = Integer(reps, 10)
-      break
+      if reps == 0
+        puts "Error: 0 reps"
+      else
+        break
+      end
     end
   end
   return WSR.new(weight, sets, reps)
+end
+
+# Public: Asks a user for an exercise name. Used in freeform workout add
+#
+# Returns the exercise name that the user gives
+def ask_for_exercise(stdin=$stdin)
+  print "What is the name of the exercise? "
+  name = stdin.gets.chomp
+  name.downcase!
+  if name.eql?('exit') || name.eql?('quit')
+    abort
+  else
+    return name
+  end
 end
 
 # Public: Checks for whether a passed in string is made up of numbers
