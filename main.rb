@@ -50,6 +50,9 @@ def start(stdin=$stdin)
       success = add_option(user, stdin)
       if success
         display_options(user)
+        if user.more_help
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+        end
         print "What else would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
@@ -155,8 +158,6 @@ end
 #
 # user - The user object that is modified
 #
-# TODO for adding a workout, check if the user already inputted that
-# TODO exercise as a name
 # Returns true for a successful workout add, and false otherwise
 def add_workout(user, stdin=$stdin)
   print "Would you like to use a pre-defined template? "
@@ -314,16 +315,28 @@ def add_workout_freeform(user, stdin=$stdin)
       option.downcase!
     when 'next'
       wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+      wsrs = Array.new
       workout.add_exercise(curr_exercise)
       exercise_name = ask_for_exercise(stdin)
+      duplicate = false
+      workout.exercises.each do |name, exercise|
+        if name.to_s.eql? exercise_name
+          puts "Exercise already entered"
+          duplicate = true
+          break
+        end
+      end
+      if duplicate
+        option = 'next'
+        next
+      end
       puts exercise_name.split.map(&:capitalize).join(' ')
       curr_exercise = Exercise.new(exercise_name)
-      wsrs = Array.new
       option = 'more'
     when 'exit', 'quit'
       abort
     else
-      printf("%s is not a valid command", option)
+      printf("%s is not a valid command\n", option)
       print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
       option.downcase!
