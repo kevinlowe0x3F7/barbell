@@ -57,9 +57,9 @@ def start(stdin=$stdin)
         choice = stdin.gets.chomp
         choice.downcase!
       else
-        puts "Error with adding workout. Try again."
+        puts "Error with adding. Try again."
         print "What would you like to do? "
-        display_options
+        display_options(user)
         choice = stdin.gets.chomp
         choice.downcase!
       end
@@ -142,7 +142,19 @@ def add_option(user, stdin=$stdin)
         return false
       end
     when '3', 'exercise'
-      puts "adding exercise"
+      success = add_exercise_into_workout(user, stdin)
+      if success
+        print "Add another exercise in a workout? (y or n) "
+        add_another = stdin.gets.chomp
+        add_another.downcase!
+        if add_another == 'y' || add_another == 'yes'
+          choice = '3'
+        else
+          return true
+        end
+      else
+        return false
+      end
     when 'exit', 'quit'
       abort
     else
@@ -473,6 +485,101 @@ def add_template(user, stdin=$stdin)
   end
   user.add_template(new_template)
   puts "New template added! User data saved."
+  User.serialize(user)
+  return true
+end
+
+# Public: Adds an exercise into an existing workout, updating the workout.
+#
+# user - The user to be modified
+#
+# Returns true on a successful add, false otherwise
+def add_exercise_into_workout(user, stdin=$stdin)
+  if user.workouts.length == 0
+    puts "No workouts to add an exercise into"
+    return false
+  end
+  puts "Adding exercise:"
+  num = 0
+  limit = 2
+  while true
+    while num <= limit
+      index = user.workouts.length - 1 - num
+      if index < 0
+        break
+      end
+      if num == limit
+        printf("%d. Choose this number for less recent workouts\n", num)
+      else
+        printf("%d. %s\n", num, user.workouts[index].name)
+      end
+      num += 1
+    end
+    if index < 0
+      seen_range = [0, user.workouts.length - 1]
+    else
+      seen_range = [user.workouts.length - limit, user.workouts.length - 1]
+    end
+    num = limit
+    index += 1
+    print "Please choose (by index) a workout to add an exercise into: "
+    choice = stdin.gets.chomp
+    breakout = false
+    while true
+      if !(is_i? choice)
+        puts "Not a number"
+        print "Please choose (by index) a workout to add an exercise into: "
+        choice = stdin.gets.chomp
+      elsif choice.eql?('quit') || choice.eql?('exit')
+        abort
+      else
+        num = Integer(choice, 10)
+        real_index = user.workouts.length - 1 - num
+        if real_index == user.workouts.length - 1 - limit
+          limit += 10
+          break
+        elsif real_index < 0 || real_index >= user.workouts.length\
+          || real_index < seen_range[0] || real_index > seen_range[1]
+          puts "Number out of range"
+          print "Please choose (by index) a workout to add an exercise into: "
+          choice = stdin.gets.chomp
+        else
+          breakout = true
+          break
+        end
+      end
+    end
+    if breakout
+      break
+    end
+  end
+  workout = user.workouts[real_index]
+  exercise_name = ask_for_exercise(stdin)
+  exercise_to_add = Exercise.new(exercise_name)
+  wsrs = Array.new
+  option = 'more'
+  while !option.eql('done')
+    case option
+    when 'more'
+      wsrs << ask_for_wsr(stdin)
+      if user.more_help
+        puts "Type in 'more' or 'done'"
+      end
+      print "More sets or done with entering?"
+      option = stdin.gets.chomp
+      option.downcase!
+    when 'exit', 'quit'
+      abort
+    else
+      printf("%s is not a valid command\n", option)
+      print "More sets, move to next exercise, or done with workout? "
+      option = stdin.gets.chomp
+      option.downcase!
+    end
+  end
+  wsrs.each { |wsr| exercise_to_add.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+  workout.add_exercise(exercise_to_add)
+  puts "Exercise successfully added! User data saved"
   User.serialize(user)
   return true
 end
