@@ -188,7 +188,8 @@ def add_workout(user, stdin=$stdin)
           puts "Choose a template"
           template_num = 1
           user.templates.each do |template|
-            printf("%d. %s\n", template_num, template)
+            template_name = template.name.split.map(&:capitalize).join(' ')
+            printf("%d. %s\n", template_num, template.name)
             template_num += 1
           end
           print "Template number: "
@@ -196,7 +197,7 @@ def add_workout(user, stdin=$stdin)
           template.downcase! 
           if is_i? template
             template_index = Integer(template, 10) - 1
-            if template_index > user.templates.length
+            if template_index >= user.templates.length || template_index < 0
               puts "Number out of bounds"
               next
             else
@@ -248,8 +249,8 @@ def add_workout_with_template(user, template, stdin=$stdin)
   workout = Workout.new(proper_template)
   wsrs = Array.new
   exercise_num = 0
-  exercise_name = template[exercise_num]
-  puts template[exercise_num].split.map(&:capitalize).join(' ')
+  exercise_name = template.exercises[exercise_num]
+  puts exercise_name.split.map(&:capitalize).join(' ')
   curr_exercise = Exercise.new(exercise_name)
   option = 'more'
   while !(option.eql? 'done')
@@ -266,11 +267,11 @@ def add_workout_with_template(user, template, stdin=$stdin)
       wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
       workout.add_exercise(curr_exercise)
       exercise_num += 1
-      if exercise_num >= template.length
+      if exercise_num >= template.exercises.length
         break
       end
-      exercise_name = template[exercise_num]
-      puts template[exercise_num].split.map(&:capitalize).join(' ')
+      exercise_name = template.exercises[exercise_num]
+      puts exercise_name.split.map(&:capitalize).join(' ')
       curr_exercise = Exercise.new(exercise_name)
       wsrs = Array.new
       option = 'more'
@@ -288,7 +289,7 @@ def add_workout_with_template(user, template, stdin=$stdin)
   end
   print "How many days ago was this workout? "
   days_ago = stdin.gets.chomp
-  while !days_ago.is_i?
+  while !(is_i? days_ago)
     puts "Not a number, please input an integer"
     print "How many days ago was this workout? "
     days_ago = stdin.gets.chomp
@@ -558,14 +559,14 @@ def add_exercise_into_workout(user, stdin=$stdin)
   exercise_to_add = Exercise.new(exercise_name)
   wsrs = Array.new
   option = 'more'
-  while !option.eql('done')
+  while !option.eql?('done')
     case option
     when 'more'
       wsrs << ask_for_wsr(stdin)
       if user.more_help
         puts "Type in 'more' or 'done'"
       end
-      print "More sets or done with entering?"
+      print "More sets or done with entering? "
       option = stdin.gets.chomp
       option.downcase!
     when 'exit', 'quit'
