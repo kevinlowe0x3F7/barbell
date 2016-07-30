@@ -99,8 +99,6 @@ end
 #
 # Returns true if the user adds one or more things without any errors,
 # and false otherwise.
-# TODO implement getting user input for each add operation
-# TODO ensure that an empty template can't be added
 def add_option(user, stdin=$stdin)
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
@@ -241,8 +239,6 @@ end
 # template - A list of exercises that will be used
 #
 # Returns true if workout is successfully added, and false otherwise.
-# TODO make sure to explain WSR in help text since it's a bit confusing,
-# specifically regarding the more, next, and done
 def add_workout_with_template(user, template, stdin=$stdin)
   puts "Adding workout:"
   proper_template = template.name.split.map(&:capitalize).join(' ')

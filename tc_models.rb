@@ -31,11 +31,11 @@ class TestModels < Test::Unit::TestCase
     assert(bench.add_wsr(185,3,5))
     assert_equal(1, bench.volume.size)
     
-    assert_equal("Bench Press\n185x3x5\n", bench.to_s)
+    assert_equal("Bench Press\n185x6x5\n", bench.to_s)
 
-    equal_wsr = WSR.new(185,3,5)
+    equal_wsr = WSR.new(185,6,5)
     bench.volume.each do |wsr|
-      assert_equal("185x3x5", wsr.to_s)
+      assert_equal("185x6x5", wsr.to_s)
       assert(wsr.eql? equal_wsr)
     end
     
@@ -44,7 +44,7 @@ class TestModels < Test::Unit::TestCase
 
     assert(bench.add_wsr(225,1,5))
     assert_equal(2, bench.volume.size)
-    assert_equal("Bench Press\n225x1x5\n185x3x5\n", bench.to_s)
+    assert_equal("Bench Press\n225x1x5\n185x6x5\n", bench.to_s)
   end
   
   def test_exercise_and_wsr_deleting
@@ -94,16 +94,22 @@ class TestModels < Test::Unit::TestCase
     rows = Exercise.new("Bent-over row")
     rows.add_wsr(145,3,5)
 
+    rows2 = Exercise.new("Bent-over row")
+    rows2.add_wsr(165,3,5)
+
     assert(workout1.add_exercise(squat))
     assert(workout1.add_exercise(bench))
     assert(workout1.add_exercise(rows))
+    assert_equal(3, workout1.exercises.size)
+    assert(workout1.add_exercise(rows2))
+    assert_equal(3, workout1.exercises.size)
     assert(!(workout1.add_exercise(nil)))
     assert_equal("Error in entering exercise\n", $stdout.string)
     $stdout.reopen("")
 
     assert_equal(workout1.exercises[:squat], squat)
     assert_equal(workout1.exercises[:bench], bench)
-    assert_equal(workout1.exercises[:"bent-over row"], rows)
+    assert_equal(2, workout1.exercises[:"bent-over row"].volume.length)
 
     assert(workout1.delete_exercise("SQUAT"))
     assert(!(workout1.exercises.include? :squat))

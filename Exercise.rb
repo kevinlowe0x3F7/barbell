@@ -29,7 +29,12 @@ class Exercise
       puts "Negative number in entry"
       return false
     end
-    volume.add(WSR.new(weight, sets, reps))
+    new_wsr = WSR.new(weight, sets, reps)
+    if @volume.include? new_wsr
+      @volume.delete new_wsr
+      new_wsr.sets = new_wsr.sets * 2
+    end
+    @volume.add new_wsr
     return true
   end
 
@@ -72,11 +77,11 @@ end
 # TODO eventually: include feature for RPE
 class WSR
   # Public: The amount of weight done, 0 indicating bodyweight.
-  attr_reader :weight
+  attr_accessor :weight
   # Public: The number of sets done.
-  attr_reader :sets
+  attr_accessor :sets
   # Public: The number of reps completed.
-  attr_reader :reps
+  attr_accessor :reps
 
   # Public: Initialize a WSR with given variables to set.
   #

@@ -32,7 +32,6 @@ class Workout
   # days_ago - The number of days that have passed since the user did
   # the workout in order to set the workout to the correct day
   #
-  # TODO Include asking about days ago in parsing
   # Returns true if successful date switch, false otherwise.
   def set_date(days_ago)
     if !(days_ago.is_a? Integer)
@@ -54,7 +53,14 @@ class Workout
       puts "Error in entering exercise" 
       return false
     end
-    @exercises[exercise.name.to_sym] = exercise
+    if @exercises.key?(exercise.name.to_sym)
+      curr_exercise = @exercises[exercise.name.to_sym]
+      exercise.volume.each do |wsr|
+        curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps)
+      end
+    else
+      @exercises[exercise.name.to_sym] = exercise
+    end
     return true
   end
 
