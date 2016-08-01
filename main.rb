@@ -63,6 +63,23 @@ def start(stdin=$stdin)
         choice = stdin.gets.chomp
         choice.downcase!
       end
+    when '2', 'view'
+      success = view_option(user, stdin)
+      if success
+        display_options(user)
+        if user.more_help
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+        end
+        print "What else would you like to do? "
+        choice = stdin.gets.chomp
+        choice.downcase!
+      else
+        puts "Error with viewing. Try again."
+        print "What would you like to do? "
+        display_options(user)
+        choice = stdin.gets.chomp
+        choice.downcase!
+      end
     when 'exit', 'quit'
       User.serialize(user)
       return
@@ -79,7 +96,7 @@ end
 #
 # user - The current user
 def display_options(user)
-  options = ["Add"]
+  options = ["Add", "View"]
   option_num = 1
   options.each do |option|
     printf("%d. %s\n", option_num, option)
@@ -146,6 +163,77 @@ def add_option(user, stdin=$stdin)
         add_another = stdin.gets.chomp
         add_another.downcase!
         if add_another == 'y' || add_another == 'yes'
+          choice = '3'
+        else
+          return true
+        end
+      else
+        return false
+      end
+    when 'exit', 'quit'
+      abort
+    else
+      print "Please choose one of the above options: "
+      choice = stdin.gets.chomp
+      choice.downcase!
+    end
+  end
+end
+
+# Public: Gives the user the option to view something, which can be a
+# template that they entered, any workout, as well as an exercise in
+# a graph form.
+#
+# user - The user which the information is coming from
+#
+# Returns true for a successful viewing, and false otherwise
+def view_option(user, stdin=$stdin)
+  options = ["Workout", "Template", "Exercise"]
+  option_num = 1
+  options.each do |option|
+    printf("%d. %s\n", option_num, option)
+    option_num += 1
+  end
+  print "What would you like to view? "
+  choice = stdin.gets.chomp
+  choice.downcase!
+  while true
+    case choice
+    when '1', 'workout'
+      success = view_workout(user, stdin)
+      if success
+        print "View another workout? (y or n) "
+        view_another = stdin.gets.chomp
+        view_another.downcase!
+        if view_another == 'y' || view_another == 'yes'
+          choice = '1'
+        else
+          return true
+        end
+      else
+        return false
+      end
+    when '2', 'template'
+      success = view_template(user, stdin)
+      if success
+        print "View another template? (y or n) "
+        view_another = stdin.gets.chomp
+        view_another.downcase!
+        if view_another == 'y' || view_another == 'yes'
+          choice = '2'
+        else
+          return true
+        end
+      else
+        return false
+      end
+    when '3', 'exercise'
+      success = view_exercise(user, stdin)
+      if success
+        print "View another exercise? (y or n) "
+        view_another = stdin.gets.chomp
+        view_another.downcase!
+        if view_another == 'y' || view_another == 'yes'
           choice = '3'
         else
           return true
@@ -351,6 +439,10 @@ def add_workout_freeform(user, stdin=$stdin)
       option.downcase!
     end
   end
+  if wsrs.length > 0
+    wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+    workout.add_exercise(curr_exercise)
+  end
   if user.more_help
     puts "Enter 0 for today, otherwise go by integer values"
   end
@@ -497,6 +589,48 @@ def add_exercise_into_workout(user, stdin=$stdin)
     return false
   end
   puts "Adding exercise:"
+  workout = ask_for_workout(user, stdin)
+  exercise_name = ask_for_exercise(stdin)
+  exercise_to_add = Exercise.new(exercise_name)
+  wsrs = Array.new
+  option = 'more'
+  while !option.eql?('done')
+    case option
+    when 'more'
+      wsrs << ask_for_wsr(stdin)
+      if user.more_help
+        puts "Type in 'more' or 'done'"
+      end
+      print "More sets or done with entering? "
+      option = stdin.gets.chomp
+      option.downcase!
+    when 'exit', 'quit'
+      abort
+    else
+      printf("%s is not a valid command\n", option)
+      print "More sets, move to next exercise, or done with workout? "
+      option = stdin.gets.chomp
+      option.downcase!
+    end
+  end
+  wsrs.each { |wsr| exercise_to_add.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+  workout.add_exercise(exercise_to_add)
+  puts "Exercise successfully added! User data saved"
+  User.serialize(user)
+  return true
+end
+
+# Public: Get a workout from the user in the list of workouts. Asks the
+# user for a number which is mapped to a workout. Separate function
+# to avoid repeating
+#
+# user - The user to get the workout from
+#
+# Returns the workout given by the user, or nil if no workouts available
+def ask_for_workout(user, stdin=$stdin)
+  if user.workouts.length == 0
+    return nil
+  end
   num = 0
   limit = 2
   while true
@@ -551,34 +685,42 @@ def add_exercise_into_workout(user, stdin=$stdin)
     end
   end
   workout = user.workouts[real_index]
-  exercise_name = ask_for_exercise(stdin)
-  exercise_to_add = Exercise.new(exercise_name)
-  wsrs = Array.new
-  option = 'more'
-  while !option.eql?('done')
-    case option
-    when 'more'
-      wsrs << ask_for_wsr(stdin)
-      if user.more_help
-        puts "Type in 'more' or 'done'"
-      end
-      print "More sets or done with entering? "
-      option = stdin.gets.chomp
-      option.downcase!
-    when 'exit', 'quit'
-      abort
-    else
-      printf("%s is not a valid command\n", option)
-      print "More sets, move to next exercise, or done with workout? "
-      option = stdin.gets.chomp
-      option.downcase!
-    end
+  return workout
+end
+
+# Public: View a single workout.
+#
+# user - The user where the workout comes from
+#
+# Returns true on success, false otherwise
+# TODO view_workout method (false case could happen when no workouts)
+def view_workout(user, stdin=$stdin)
+  if user.workouts.length == 0
+    puts "No workouts available"
+    return false
   end
-  wsrs.each { |wsr| exercise_to_add.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
-  workout.add_exercise(exercise_to_add)
-  puts "Exercise successfully added! User data saved"
-  User.serialize(user)
+  workout = ask_for_workout(user, stdin)
+  puts workout.to_s
   return true
+end
+
+# Public: View a single template.
+#
+# user - The user where the template comes from
+#
+# Returns true on success, false otherwise
+# TODO view_template method (false case could happen when no templates)
+def view_template(user, stdin=$stdin)
+end
+
+# Public: View a single exercise
+#
+# user - The user where the exercises are being extrapolated from
+#
+# Returns true on success, false otherwise
+# TODO view_exercise method (false case could happen when exercise is not
+# TODO found or if no workouts)
+def view_exercise(user, stdin=$stdin)
 end
 
 # Public: Checks for whether a passed in string is made up of numbers
