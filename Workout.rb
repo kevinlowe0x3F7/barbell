@@ -122,7 +122,8 @@ class Workout
   # Public: The string representation for the workout, including each
   # exercise one by one
   def to_s
-    result = ""
+    result = @name.split.map(&:capitalize).join(' ')
+    result << "\n"
     @exercises.each { |name, exercise| result << exercise.to_s }
     return result
   end
