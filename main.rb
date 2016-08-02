@@ -642,7 +642,9 @@ def ask_for_workout(user, stdin=$stdin)
       if num == limit
         printf("%d. Choose this number for less recent workouts\n", num)
       else
-        printf("%d. %s\n", num, user.workouts[index].name)
+        workout_name = user.workouts[index].name
+        workout_name = workout_name.split.map(&:capitalize).join(' ')
+        printf("%d. %s\n", num, workout_name)
       end
       num += 1
     end
@@ -710,7 +712,9 @@ def ask_for_template(user, stdin=$stdin)
       if num == limit
         printf("%d. Choose this number for other templates\n", num);
       else
-        printf("%d. %s\n", num, user.templates[index].name)
+        template_name = user.templates[index].name
+        template_name = template_name.split.map(&:capitalize).join(' ')
+        printf("%d. %s\n", num, template_name)
       end
       num += 1
     end
