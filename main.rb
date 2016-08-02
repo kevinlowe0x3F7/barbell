@@ -58,8 +58,8 @@ def start(stdin=$stdin)
         choice.downcase!
       else
         puts "Error with adding. Try again."
-        print "What would you like to do? "
         display_options(user)
+        print "What would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       end
@@ -75,8 +75,8 @@ def start(stdin=$stdin)
         choice.downcase!
       else
         puts "Error with viewing. Try again."
-        print "What would you like to do? "
         display_options(user)
+        print "What would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       end
@@ -688,12 +688,79 @@ def ask_for_workout(user, stdin=$stdin)
   return workout
 end
 
+# Public: Get a template from the user in the list of workouts. Asks the
+# user for a number which is mapped to a template. Separate function
+# to avoid repeating
+#
+# user - The user to get the template from
+#
+# Returns the template given by the user, or nil if no templates available
+def ask_for_template(user, stdin=$stdin)
+  if user.templates.length == 0
+    return nil
+  end
+  num = 0
+  limit = 2
+  while true
+    while num <= limit
+      index = user.templates.length - 1 - num
+      if index < 0
+        break
+      end
+      if num == limit
+        printf("%d. Choose this number for other templates\n", num);
+      else
+        printf("%d. %s\n", num, user.templates[index].name)
+      end
+      num += 1
+    end
+    if index < 0
+      seen_range = [0, user.templates.length - 1]
+    else
+      seen_range = [user.templates.length - limit, user.templates.length - 1]
+    end
+    num = limit
+    index += 1
+    print "Please choose (by index) a template "
+    choice = stdin.gets.chomp
+    breakout = false
+    while true
+      if !(is_i? choice)
+        puts "Not a number"
+        print "Please choose (by index) a template "
+        choice = stdin.gets.chomp
+      elsif choice.eql?('quit') || choice.eql?('exit')
+        abort
+      else
+        num = Integer(choice, 10)
+        real_index = user.templates.length - 1 - num
+        if real_index == user.templates.length - 1 - limit
+          limit += 10
+          break
+        elsif real_index < 0 || real_index >= user.templates.length\
+          || real_index < seen_range[0] || real_index > seen_range[1]
+          puts "Number out of range"
+          print "Please choose (by index) a template "
+          choice = stdin.gets.chomp
+        else
+          breakout = true
+          break
+        end
+      end
+    end
+    if breakout
+      break
+    end
+  end
+  template = user.templates[real_index]
+  return template
+end
+
 # Public: View a single workout.
 #
 # user - The user where the workout comes from
 #
 # Returns true on success, false otherwise
-# TODO view_workout method (false case could happen when no workouts)
 def view_workout(user, stdin=$stdin)
   if user.workouts.length == 0
     puts "No workouts available"
@@ -711,6 +778,13 @@ end
 # Returns true on success, false otherwise
 # TODO view_template method (false case could happen when no templates)
 def view_template(user, stdin=$stdin)
+  if user.templates.length == 0
+    puts "No templates available"
+    return false
+  end
+  template = ask_for_template(user, stdin)
+  puts template.to_s
+  return true
 end
 
 # Public: View a single exercise
