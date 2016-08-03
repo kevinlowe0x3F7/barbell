@@ -80,6 +80,23 @@ def start(stdin=$stdin)
         choice = stdin.gets.chomp
         choice.downcase!
       end
+    when '3', 'delete'
+      success = delete_option(user, stdin)
+      if success
+        display_options(user)
+        if user.more_help
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+        end
+        print "What else would you like to do? "
+        choice = stdin.gets.chomp
+        choice.downcase!
+      else
+        puts "Error with deleting. Try again."
+        display_options(user)
+        print "What would you like to do? "
+        choice = stdin.gets.chomp
+        choice.downcase!
+      end
     when 'exit', 'quit'
       User.serialize(user)
       return
@@ -96,7 +113,7 @@ end
 #
 # user - The current user
 def display_options(user)
-  options = ["Add", "View"]
+  options = ["Add", "View", "Delete"]
   option_num = 1
   options.each do |option|
     printf("%d. %s\n", option_num, option)
@@ -251,6 +268,62 @@ def view_option(user, stdin=$stdin)
   end
 end
 
+# Public: Grab user input to do a deletion, of either a workout or a
+# template
+#
+# user - The user object that is modified
+#
+# Returns true for a successful deletion, false otherwise
+def delete_option(user, stdin=$stdin)
+  options = ["Workout", "Template"]
+  option_num = 1
+  options.each do |option|
+    printf("%d. %s\n", option_num, option)
+    option_num += 1
+  end
+  print "What would you like to view? "
+  choice = stdin.gets.chomp
+  choice.downcase!
+  while true
+    case choice
+    when '1', 'workout'
+      success = delete_workout(user, stdin)
+      if success
+        print "Delete another workout? (y or n) "
+        delete_another = stdin.gets.chomp
+        delete_another.downcase!
+        if delete_another == 'y' || delete_another == 'yes'
+          choice = '1'
+        else
+          return true
+        end
+      else
+        return false
+      end
+    when '2', 'template'
+      success = delete_template(user, stdin)
+      if success
+        print "Delete another template? (y or n) "
+        delete_another = stdin.gets.chomp
+        delete_another.downcase!
+        if delete_another == 'y' || delete_another == 'yes'
+          choice = '2'
+        else
+          return true
+        end
+      else
+        return false
+      end
+    when 'exit', 'quit'
+      abort
+    else
+      print "Please choose one of the above options: "
+      choice = stdin.gets.chomp
+      choice.downcase!
+    end
+  end
+end
+
 # Public: Grab user input for a workout, through either a template or
 # through freeform entry.
 #
@@ -367,6 +440,10 @@ def add_workout_with_template(user, template, stdin=$stdin)
       option = stdin.gets.chomp
       option.downcase!
     end
+  end
+  if wsrs.length > 0
+      wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
+      workout.add_exercise(curr_exercise)
   end
   if user.more_help
     puts "Enter 0 for today, otherwise go by integer values"
@@ -780,7 +857,6 @@ end
 # user - The user where the template comes from
 #
 # Returns true on success, false otherwise
-# TODO view_template method (false case could happen when no templates)
 def view_template(user, stdin=$stdin)
   if user.templates.length == 0
     puts "No templates available"
@@ -799,6 +875,43 @@ end
 # TODO view_exercise method (false case could happen when exercise is not
 # TODO found or if no workouts)
 def view_exercise(user, stdin=$stdin)
+  return true
+end
+
+# Public: Delete a single workout
+#
+# user - The user object that is being modified
+#
+# Returns true on successful deletion, false otherwise
+# TODO delete_workout method (False case could happen when no workouts)
+def delete_workout(user, stdin=$stdin)
+  if user.workouts.length == 0
+    puts "No workouts available"
+    return false
+  end
+  workout = ask_for_workout(user, stdin)
+  user.workouts.delete(workout)
+  puts "Successfully deleted workout! User data saved"
+  User.serialize(user)
+  return true
+end
+
+# Public: Delete a single template
+#
+# user - The user object that is being modified
+#
+# Returns true on successful deletion, false otherwise
+# TODO delete_tempalte method (false case could happen when no templates)
+def delete_template(user, stdin=$stdin)
+  if user.templates.length == 0
+    puts "No templates available"
+    return false
+  end
+  template = ask_for_template(user, stdin)
+  user.templates.delete(template)
+  puts "Successfully deleted template! User data saved"
+  User.serialize(user)
+  return true
 end
 
 # Public: Checks for whether a passed in string is made up of numbers
