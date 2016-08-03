@@ -85,6 +85,7 @@ class User
       return false
     else
       @workouts << workout
+      @workouts.sort_by! { |workout| workout.date }
       return true
     end
   end
