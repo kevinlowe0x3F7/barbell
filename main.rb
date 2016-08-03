@@ -883,7 +883,6 @@ end
 # user - The user object that is being modified
 #
 # Returns true on successful deletion, false otherwise
-# TODO delete_workout method (False case could happen when no workouts)
 def delete_workout(user, stdin=$stdin)
   if user.workouts.length == 0
     puts "No workouts available"
@@ -901,7 +900,6 @@ end
 # user - The user object that is being modified
 #
 # Returns true on successful deletion, false otherwise
-# TODO delete_tempalte method (false case could happen when no templates)
 def delete_template(user, stdin=$stdin)
   if user.templates.length == 0
     puts "No templates available"
