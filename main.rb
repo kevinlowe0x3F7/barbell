@@ -4,6 +4,7 @@ require './Exercise.rb'
 require './Workout.rb'
 require './User.rb'
 require './Template.rb'
+require './colorize.rb'
 # TODO Include option to remove help text in session for experienced users
 # Public: Script that the user will use to create and save their workouts.
 # The script uses a while loop and user input to process data. For usage
@@ -38,7 +39,7 @@ def start(stdin=$stdin)
     puts "Error loading user object. Check to see if '.fitness' dir "\
       + "exists, otherwise considering restarting."
   end
-  puts "Welcome to your command line fitness buddy!"
+  puts "Welcome to Barbell Gem!"
   display_options(user)
   print "What would you like to do? "
   choice = stdin.gets.chomp
@@ -423,6 +424,7 @@ def add_workout_with_template(user, template, stdin=$stdin)
     when 'next'
       wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
       workout.add_exercise(curr_exercise)
+      wsrs = Array.new
       exercise_num += 1
       if exercise_num >= template.exercises.length
         break
@@ -430,7 +432,6 @@ def add_workout_with_template(user, template, stdin=$stdin)
       exercise_name = template.exercises[exercise_num]
       puts exercise_name.split.map(&:capitalize).join(' ')
       curr_exercise = Exercise.new(exercise_name)
-      wsrs = Array.new
       option = 'more'
     when 'exit', 'quit'
       abort
@@ -491,7 +492,8 @@ def add_workout_freeform(user, stdin=$stdin)
       wsrs.each { |wsr| curr_exercise.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
       wsrs = Array.new
       workout.add_exercise(curr_exercise)
-      exercise_name = ask_for_exercise(stdin)
+      next_prompt = "What is the name of the next exercise? "
+      exercise_name = ask_for_exercise(next_prompt, stdin)
       duplicate = false
       workout.exercises.each do |name, exercise|
         if name.to_s.eql? exercise_name
@@ -591,9 +593,12 @@ end
 # Public: Asks a user for an exercise name. Used in freeform workout add
 # and for creating templates
 #
+# prompt - The prompt that appears when asking for the exercise.
+#
 # Returns the exercise name that the user gives
-def ask_for_exercise(stdin=$stdin)
-  print "What is the name of the exercise? "
+def ask_for_exercise(prompt='What is the name of the exercise? ',
+                     stdin=$stdin)
+  print prompt
   name = stdin.gets.chomp
   name.downcase!
   if name.eql?('exit') || name.eql?('quit')
@@ -628,8 +633,9 @@ def add_template(user, stdin=$stdin)
   end
   new_template = Template.new(template_name)
   choice = 'y'
+  prompt = "What is the name of the exercise? "
   while !choice.eql?('n') && !choice.eql?('no')
-    next_exercise = ask_for_exercise(stdin)
+    next_exercise = ask_for_exercise(prompt, stdin)
     if new_template.exercises.include? next_exercise
       puts "Exercise already in template"
     else
@@ -648,6 +654,7 @@ def add_template(user, stdin=$stdin)
         break
       end
     end
+    prompt = "What is the name of the next exercise? "
   end
   user.add_template(new_template)
   puts "New template added! User data saved."
@@ -875,7 +882,14 @@ end
 # TODO view_exercise method (false case could happen when exercise is not
 # TODO found or if no workouts)
 def view_exercise(user, stdin=$stdin)
-  return true
+  if !(Gem::Specification::find_all_by_name('gruf').any?)
+    puts "Graphing dependency not found, please install it by using"\
+      " the command 'gem install gruff'"
+    return false
+  end
+  prompt = "What exercise do you want to view? "
+  exercise_to_view = ask_for_exercise(prompt, stdin)
+  
 end
 
 # Public: Delete a single workout
