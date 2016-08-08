@@ -1,5 +1,7 @@
 # !/usr/bin/ruby
 
+require 'gruff'
+
 require './Exercise.rb'
 require './Workout.rb'
 require './User.rb'
@@ -882,13 +884,58 @@ end
 # TODO view_exercise method (false case could happen when exercise is not
 # TODO found or if no workouts)
 def view_exercise(user, stdin=$stdin)
-  if !(Gem::Specification::find_all_by_name('gruf').any?)
+  if !(Gem::Specification::find_all_by_name('gruff').any?)
     puts "Graphing dependency not found, please install it by using"\
-      " the command 'gem install gruff'"
+      " the command 'gem install gruff'".red
     return false
   end
+  if user.workouts.length == 0
+    puts "No workouts available. Add a workout with the add option"
+    return false
+  end
+  global_max = 0
   prompt = "What exercise do you want to view? "
   exercise_to_view = ask_for_exercise(prompt, stdin)
+  weights = Hash.new
+  user.workouts.each do |workout|
+    workout.exercises.each do |exercise|
+      if exercise.name.eql? exercise_to_view
+        max_weight = exercise.volume.max_by { |wsr| wsr.weight }
+        weights[workout.date] = max_weight
+        if max_weight > global_max
+          global_max = max_weight
+        end
+      end
+    end
+  end
+  return draw_exercise(weights, global_max, stdin)
+end
+
+# Public: Displays the data of an exercise using Gruff gem.
+#
+# weights - A hash map, with time objects as keys and max weights as values
+# max_weight - The maximum weight the user performed to determine how
+# high in weight the line graph goes
+#
+# TODO HIGH LEVEL ALGORITHM
+# TODO for each day in the workouts thats still in the same year,
+# TODO (based off of the last workout entered)
+# TODO convert it into a number between 1 and 365 (factor in leap year)
+# TODO for all previous years, take their integer, do 365 - int, then
+# TODO add 365 for each extra year minus one. Then take its negative
+# TODO Keep track of the smallest number.
+# TODO Once all date are converted into integers, enter them into the graph
+# TODO by adding the positive version of the smallest number (so that
+# TODO all dates are positive).
+# TODO There should be a label definitely for first and last values.
+# TODO could do a hard coding of the number of labels based on the
+# TODO number of data points (ratio between the two)
+# Returns true for a successful drawing, false otherwise
+def draw_exercise(weights, max_weight, stdin=$stdin)
+  if weights.empty?
+    puts "No workouts found with that exercise".red
+    return false
+  end
   
 end
 
