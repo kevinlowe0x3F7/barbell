@@ -13,7 +13,7 @@ require './colorize.rb'
 # guide, type 'ruby main.rb help' into the command line.
 
 trap "SIGINT" do
-  puts "Interrupted, no data in the session will be saved"
+  puts "\nInterrupted, there may be unsaved data".red
   exit 130
 end
 
@@ -22,7 +22,7 @@ end
 # Returns true for successful initialization, and false otherwise
 def init
   if File.exist? '.fitness'
-    puts "Data files already initialized"
+    puts "Data files already initialized".red
     return false
   else
     user = User.new
@@ -39,7 +39,7 @@ def start(stdin=$stdin)
     end
   rescue
     puts "Error loading user object. Check to see if '.fitness' dir "\
-      + "exists, otherwise considering restarting."
+      + "exists, otherwise considering restarting.".red
   end
   puts "Welcome to Barbell Gem!"
   display_options(user)
@@ -54,13 +54,13 @@ def start(stdin=$stdin)
       if success
         display_options(user)
         if user.more_help
-          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done".yellow
         end
         print "What else would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       else
-        puts "Error with adding. Try again."
+        puts "Error with adding. Try again.".red
         display_options(user)
         print "What would you like to do? "
         choice = stdin.gets.chomp
@@ -71,13 +71,13 @@ def start(stdin=$stdin)
       if success
         display_options(user)
         if user.more_help
-          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done".yellow
         end
         print "What else would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       else
-        puts "Error with viewing. Try again."
+        puts "Error with viewing. Try again.".red
         display_options(user)
         print "What would you like to do? "
         choice = stdin.gets.chomp
@@ -88,23 +88,24 @@ def start(stdin=$stdin)
       if success
         display_options(user)
         if user.more_help
-          puts "Type 'exit' or 'quit' to exit at any time, or if you are done"
+          puts "Type 'exit' or 'quit' to exit at any time, or if you are done".yellow
         end
         print "What else would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       else
-        puts "Error with deleting. Try again."
+        puts "Error with deleting. Try again.".red
         display_options(user)
         print "What would you like to do? "
         choice = stdin.gets.chomp
         choice.downcase!
       end
     when 'exit', 'quit'
+      puts "User data saved! Exiting".green
       User.serialize(user)
       return
     else
-      puts "Please choose one of the above commands."
+      puts "Please choose one of the above commands.".red
       print "What would you like to do? "
       choice = stdin.gets.chomp
       choice.downcase!
@@ -123,8 +124,8 @@ def display_options(user)
     option_num += 1
   end
   if user.more_help
-    puts "For each option, you can type either the number of the option"\
-      + ". Example: '1' or 'add' will both lead to the add command."
+    puts "For each option, you can type either the number of the option."\
+     " Example: '1' or 'add' will both lead to the add command.".yellow
   end
 end
 
@@ -342,7 +343,7 @@ def add_workout(user, stdin=$stdin)
       case choice
       when 'y', 'yes'
         if user.templates.length == 0
-          puts "No templates for user"
+          puts "No templates for user".red
           return false
         end
         template = ""
@@ -378,7 +379,7 @@ def add_workout(user, stdin=$stdin)
             template = user.templates[template_index]
             break
           else
-            puts "Template not found"
+            puts "Template not found".red
           end
         end
         success = add_workout_with_template(user, template)
@@ -418,7 +419,7 @@ def add_workout_with_template(user, template, stdin=$stdin)
     when 'more'
       wsrs << ask_for_wsr(stdin)
       if user.more_help
-        puts "Type in 'more', 'next', or 'done'"
+        puts "Type in 'more', 'next', or 'done'".yellow
       end
       print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
@@ -438,7 +439,7 @@ def add_workout_with_template(user, template, stdin=$stdin)
     when 'exit', 'quit'
       abort
     else
-      printf("%s is not a valid command", option)
+      printf("%s is not a valid command".red, option)
       puts "More sets, move to next exercise, or done with workout?"
       option = stdin.gets.chomp
       option.downcase!
@@ -449,18 +450,18 @@ def add_workout_with_template(user, template, stdin=$stdin)
       workout.add_exercise(curr_exercise)
   end
   if user.more_help
-    puts "Enter 0 for today, otherwise go by integer values"
+    puts "Enter 0 for today, otherwise go by integer values".yellow
   end
   print "How many days ago was this workout? "
   days_ago = stdin.gets.chomp
   while !(is_i? days_ago)
-    puts "Not a number, please input an integer"
+    puts "Not a number, please input an integer".red
     print "How many days ago was this workout? "
     days_ago = stdin.gets.chomp
   end
   workout.set_date(Integer(days_ago, 10))
   user.add_workout(workout)
-  puts "Workout successfully added! User data saved"
+  puts "Workout successfully added! User data saved".green
   User.serialize(user)
   return true
 end
@@ -485,7 +486,7 @@ def add_workout_freeform(user, stdin=$stdin)
     when 'more'
       wsrs << ask_for_wsr(stdin)
       if user.more_help
-        puts "Type in 'more', 'next', or 'done'"
+        puts "Type in 'more', 'next', or 'done'".yellow
       end
       print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
@@ -499,7 +500,7 @@ def add_workout_freeform(user, stdin=$stdin)
       duplicate = false
       workout.exercises.each do |name, exercise|
         if name.to_s.eql? exercise_name
-          puts "Exercise already entered"
+          puts "Exercise already entered".red
           duplicate = true
           break
         end
@@ -514,7 +515,7 @@ def add_workout_freeform(user, stdin=$stdin)
     when 'exit', 'quit'
       abort
     else
-      printf("%s is not a valid command\n", option)
+      printf("%s is not a valid command\n".red, option)
       print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
       option.downcase!
@@ -525,18 +526,18 @@ def add_workout_freeform(user, stdin=$stdin)
     workout.add_exercise(curr_exercise)
   end
   if user.more_help
-    puts "Enter 0 for today, otherwise go by integer values"
+    puts "Enter 0 for today, otherwise go by integer values".yellow
   end
   print "How many days ago was this workout? "
   days_ago = stdin.gets.chomp
   while !(is_i? days_ago)
-    puts "Not a number, please input an integer"
+    puts "Not a number, please input an integer".red
     print "How many days ago was this workout? "
     days_ago = stdin.gets.chomp
   end
   workout.set_date(Integer(days_ago, 10))
   user.add_workout(workout)
-  puts "Workout successfully added! User data saved"
+  puts "Workout successfully added! User data saved".green
   User.serialize(user)
   return true
 end
@@ -551,7 +552,7 @@ def ask_for_wsr(stdin=$stdin)
     if weight.eql?('exit') || weight.eql?('quit')
       abort
     elsif !(is_i? weight)
-      puts "Not a number, try again"
+      puts "Not a number, try again".red
     else
       weight = Integer(weight, 10)
       break
@@ -563,11 +564,11 @@ def ask_for_wsr(stdin=$stdin)
     if sets.eql?('exit') || sets.eql?('quit')
       abort
     elsif !(is_i? sets)
-      puts "Not a number, try again"
+      puts "Not a number, try again".red
     else
       sets = Integer(sets, 10)
       if sets == 0
-        puts "Error: 0 sets"
+        puts "Error: 0 sets".red
       else
         break
       end
@@ -579,11 +580,11 @@ def ask_for_wsr(stdin=$stdin)
     if reps.eql?('exit') || reps.eql?('quit')
       abort
     elsif !(is_i? reps)
-      puts "Not a number, try again"
+      puts "Not a number, try again".red
     else
       reps = Integer(reps, 10)
       if reps == 0
-        puts "Error: 0 reps"
+        puts "Error: 0 reps".red
       else
         break
       end
@@ -628,7 +629,7 @@ def add_template(user, stdin=$stdin)
       end
     end
     if duplicate
-      puts "User already has this template name, please choose another"
+      puts "User already has this template name, please choose another".red
     else
       break
     end
@@ -639,7 +640,7 @@ def add_template(user, stdin=$stdin)
   while !choice.eql?('n') && !choice.eql?('no')
     next_exercise = ask_for_exercise(prompt, stdin)
     if new_template.exercises.include? next_exercise
-      puts "Exercise already in template"
+      puts "Exercise already in template".red
     else
       new_template.add_exercise(next_exercise)
     end
@@ -651,7 +652,7 @@ def add_template(user, stdin=$stdin)
         abort
       elsif !choice.eql?('y') && !choice.eql?('yes') && !choice.eql?('n')\
               && !choice.eql?('no')
-        puts "Please select yes or no"
+        puts "Please select yes or no".red
       else
         break
       end
@@ -659,7 +660,7 @@ def add_template(user, stdin=$stdin)
     prompt = "What is the name of the next exercise? "
   end
   user.add_template(new_template)
-  puts "New template added! User data saved."
+  puts "New template added! User data saved.".green
   User.serialize(user)
   return true
 end
@@ -671,7 +672,7 @@ end
 # Returns true on a successful add, false otherwise
 def add_exercise_into_workout(user, stdin=$stdin)
   if user.workouts.length == 0
-    puts "No workouts to add an exercise into"
+    puts "No workouts to add an exercise into".red
     return false
   end
   puts "Adding exercise:"
@@ -685,7 +686,7 @@ def add_exercise_into_workout(user, stdin=$stdin)
     when 'more'
       wsrs << ask_for_wsr(stdin)
       if user.more_help
-        puts "Type in 'more' or 'done'"
+        puts "Type in 'more' or 'done'".yellow
       end
       print "More sets or done with entering? "
       option = stdin.gets.chomp
@@ -693,7 +694,7 @@ def add_exercise_into_workout(user, stdin=$stdin)
     when 'exit', 'quit'
       abort
     else
-      printf("%s is not a valid command\n", option)
+      printf("%s is not a valid command\n".red, option)
       print "More sets, move to next exercise, or done with workout? "
       option = stdin.gets.chomp
       option.downcase!
@@ -701,7 +702,7 @@ def add_exercise_into_workout(user, stdin=$stdin)
   end
   wsrs.each { |wsr| exercise_to_add.add_wsr(wsr.weight, wsr.sets, wsr.reps) }
   workout.add_exercise(exercise_to_add)
-  puts "Exercise successfully added! User data saved"
+  puts "Exercise successfully added! User data saved".green
   User.serialize(user)
   return true
 end
@@ -726,11 +727,11 @@ def ask_for_workout(user, stdin=$stdin)
         break
       end
       if num == limit
-        printf("%d. Choose this number for less recent workouts\n", num)
+        printf("%d. Choose this number for less recent workouts\n".cyan, num)
       else
         workout_name = user.workouts[index].name
         workout_name = workout_name.split.map(&:capitalize).join(' ')
-        printf("%d. %s\n", num, workout_name)
+        printf("%d. %s\n".cyan, num, workout_name)
       end
       num += 1
     end
@@ -746,7 +747,7 @@ def ask_for_workout(user, stdin=$stdin)
     breakout = false
     while true
       if !(is_i? choice)
-        puts "Not a number"
+        puts "Not a number".red
         print "Please choose (by index) a workout to add an exercise into: "
         choice = stdin.gets.chomp
       elsif choice.eql?('quit') || choice.eql?('exit')
@@ -759,7 +760,7 @@ def ask_for_workout(user, stdin=$stdin)
           break
         elsif real_index < 0 || real_index >= user.workouts.length\
           || real_index < seen_range[0] || real_index > seen_range[1]
-          puts "Number out of range"
+          puts "Number out of range".red
           print "Please choose (by index) a workout to add an exercise into: "
           choice = stdin.gets.chomp
         else
@@ -796,11 +797,11 @@ def ask_for_template(user, stdin=$stdin)
         break
       end
       if num == limit
-        printf("%d. Choose this number for other templates\n", num);
+        printf("%d. Choose this number for other templates\n".cyan, num);
       else
         template_name = user.templates[index].name
         template_name = template_name.split.map(&:capitalize).join(' ')
-        printf("%d. %s\n", num, template_name)
+        printf("%d. %s\n".cyan, num, template_name)
       end
       num += 1
     end
@@ -816,7 +817,7 @@ def ask_for_template(user, stdin=$stdin)
     breakout = false
     while true
       if !(is_i? choice)
-        puts "Not a number"
+        puts "Not a number".red
         print "Please choose (by index) a template "
         choice = stdin.gets.chomp
       elsif choice.eql?('quit') || choice.eql?('exit')
@@ -829,7 +830,7 @@ def ask_for_template(user, stdin=$stdin)
           break
         elsif real_index < 0 || real_index >= user.templates.length\
           || real_index < seen_range[0] || real_index > seen_range[1]
-          puts "Number out of range"
+          puts "Number out of range".red
           print "Please choose (by index) a template "
           choice = stdin.gets.chomp
         else
@@ -853,7 +854,7 @@ end
 # Returns true on success, false otherwise
 def view_workout(user, stdin=$stdin)
   if user.workouts.length == 0
-    puts "No workouts available"
+    puts "No workouts available".red
     return false
   end
   workout = ask_for_workout(user, stdin)
@@ -868,7 +869,7 @@ end
 # Returns true on success, false otherwise
 def view_template(user, stdin=$stdin)
   if user.templates.length == 0
-    puts "No templates available"
+    puts "No templates available".red
     return false
   end
   template = ask_for_template(user, stdin)
@@ -888,7 +889,7 @@ def view_exercise(user, stdin=$stdin)
     return false
   end
   if user.workouts.length == 0
-    puts "No workouts available. Add a workout with the add option"
+    puts "No workouts available. Add a workout with the add option".red
     return false
   end
   global_max = 0
@@ -1008,12 +1009,12 @@ end
 # Returns true on successful deletion, false otherwise
 def delete_workout(user, stdin=$stdin)
   if user.workouts.length == 0
-    puts "No workouts available"
+    puts "No workouts available".gred
     return false
   end
   workout = ask_for_workout(user, stdin)
   user.workouts.delete(workout)
-  puts "Successfully deleted workout! User data saved"
+  puts "Successfully deleted workout! User data saved".green
   User.serialize(user)
   return true
 end
@@ -1025,12 +1026,12 @@ end
 # Returns true on successful deletion, false otherwise
 def delete_template(user, stdin=$stdin)
   if user.templates.length == 0
-    puts "No templates available"
+    puts "No templates available".red
     return false
   end
   template = ask_for_template(user, stdin)
   user.templates.delete(template)
-  puts "Successfully deleted template! User data saved"
+  puts "Successfully deleted template! User data saved".green
   User.serialize(user)
   return true
 end
@@ -1052,7 +1053,7 @@ end
 if __FILE__ == $0
   args = ARGV
   if args.length == 0
-    puts "No arguments given, try 'ruby main.rb help' for guidance"
+    puts "No arguments given, try 'ruby main.rb help' for guidance".red
   elsif args[0] == 'help' || args[0] == '?'
     help
   elsif args[0] == 'init' || args[0] == 'initialize'
@@ -1060,11 +1061,11 @@ if __FILE__ == $0
   elsif args[0] == 'start'
     if !(File.exist? '.fitness')
       puts "Data files not initialized, please type 'ruby main.rb init'"\
-        + " before starting"
+        + " before starting".red
     else
       start
     end
   else
-    puts "Not a proper command, try 'ruby main.rb help' for guidance"
+    puts "Not a proper command, try 'ruby main.rb help' for guidance".red
   end
 end
