@@ -119,7 +119,7 @@ def display_options(user)
   options = ["Add", "View", "Delete"]
   option_num = 1
   options.each do |option|
-    printf("%d. %s\n", option_num, option)
+    printf("%d. %s\n".cyan, option_num, option)
     option_num += 1
   end
   if user.more_help
@@ -140,7 +140,7 @@ def add_option(user, stdin=$stdin)
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
   options.each do |option|
-    printf("%d. %s\n", option_num, option)
+    printf("%d. %s\n".cyan, option_num, option)
     option_num += 1
   end
   print "What would you like to add? "
@@ -211,7 +211,7 @@ def view_option(user, stdin=$stdin)
   options = ["Workout", "Template", "Exercise"]
   option_num = 1
   options.each do |option|
-    printf("%d. %s\n", option_num, option)
+    printf("%d. %s\n".cyan, option_num, option)
     option_num += 1
   end
   print "What would you like to view? "
@@ -281,7 +281,7 @@ def delete_option(user, stdin=$stdin)
   options = ["Workout", "Template"]
   option_num = 1
   options.each do |option|
-    printf("%d. %s\n", option_num, option)
+    printf("%d. %s\n".cyan, option_num, option)
     option_num += 1
   end
   print "What would you like to view? "
@@ -351,7 +351,7 @@ def add_workout(user, stdin=$stdin)
           template_num = 1
           user.templates.each do |template|
             template_name = template.name.split.map(&:capitalize).join(' ')
-            printf("%d. %s\n", template_num, template.name)
+            printf("%d. %s\n".cyan, template_num, template_name)
             template_num += 1
           end
           print "Template number: "
@@ -360,7 +360,7 @@ def add_workout(user, stdin=$stdin)
           if is_i? template
             template_index = Integer(template, 10) - 1
             if template_index >= user.templates.length || template_index < 0
-              puts "Number out of bounds"
+              puts "Number out of bounds".red
               next
             else
               template = user.templates[template_index]
@@ -881,8 +881,6 @@ end
 # user - The user where the exercises are being extrapolated from
 #
 # Returns true on success, false otherwise
-# TODO view_exercise method (false case could happen when exercise is not
-# TODO found or if no workouts)
 def view_exercise(user, stdin=$stdin)
   if !(Gem::Specification::find_all_by_name('gruff').any?)
     puts "Graphing dependency not found, please install it by using"\
@@ -898,9 +896,10 @@ def view_exercise(user, stdin=$stdin)
   exercise_to_view = ask_for_exercise(prompt, stdin)
   weights = Hash.new
   user.workouts.each do |workout|
-    workout.exercises.each do |exercise|
-      if exercise.name.eql? exercise_to_view
-        max_weight = exercise.volume.max_by { |wsr| wsr.weight }
+    workout.exercises.each do |exercise_name, exercise|
+      if exercise_name.to_s.eql? exercise_to_view
+        max_wsr = exercise.volume.max_by { |wsr| wsr.weight }
+        max_weight = max_wsr.weight
         weights[workout.date] = max_weight
         if max_weight > global_max
           global_max = max_weight
@@ -908,35 +907,98 @@ def view_exercise(user, stdin=$stdin)
       end
     end
   end
-  return draw_exercise(weights, global_max, stdin)
+  return draw_exercise(exercise_to_view, weights, global_max, stdin)
 end
 
 # Public: Displays the data of an exercise using Gruff gem.
 #
+# exercise - The name of the exercise to be viewed
 # weights - A hash map, with time objects as keys and max weights as values
 # max_weight - The maximum weight the user performed to determine how
 # high in weight the line graph goes
 #
-# TODO HIGH LEVEL ALGORITHM
-# TODO for each day in the workouts thats still in the same year,
-# TODO (based off of the last workout entered)
-# TODO convert it into a number between 1 and 365 (factor in leap year)
-# TODO for all previous years, take their integer, do 365 - int, then
-# TODO add 365 for each extra year minus one. Then take its negative
-# TODO Keep track of the smallest number.
-# TODO Once all date are converted into integers, enter them into the graph
-# TODO by adding the positive version of the smallest number (so that
-# TODO all dates are positive).
 # TODO There should be a label definitely for first and last values.
 # TODO could do a hard coding of the number of labels based on the
 # TODO number of data points (ratio between the two)
 # Returns true for a successful drawing, false otherwise
-def draw_exercise(weights, max_weight, stdin=$stdin)
+def draw_exercise(exercise, weights, max_weight, stdin=$stdin)
   if weights.empty?
     puts "No workouts found with that exercise".red
     return false
   end
-  
+  recent_first = weights.keys.sort.reverse!
+  least_recent = 0
+  current_year = recent_first[0].year
+  date_ints = Array.new
+  recent_first.each do |date|
+    year = date.year
+    if year < current_year
+      if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+        days_in_year = 366
+      else
+        days_in_year = 365
+      end
+      day_int = days_in_year - date_to_int(date)
+      while year < current_year-1
+        day_int += days_in_year
+        year += 1
+      end
+      day_int *= -1
+      if day_int < least_recent
+        least_recent = day_int
+      end
+      date_ints << day_int 
+    else
+      date_ints << date_to_int(date)
+    end
+  end
+  data_points = Array.new
+  add_to = (least_recent * -1) + 1
+  labels = Hash.new
+  for index in 0..recent_first.length-1
+    curr_weight = weights[recent_first[index]]
+    data_points << [date_ints[index] + add_to, curr_weight]
+    if index == 0 || index == recent_first.length - 1
+      labels[date_ints[index] + add_to] = recent_first[index].strftime("%-m/%-d")
+    end
+  end
+  g = Gruff::Line.new
+  g.title = exercise.split.map(&:capitalize).join(' ')
+  g.bold_title = true
+  g.theme = Gruff::Themes::RAILS_KEYNOTE
+  g.hide_legend = true
+  g.x_axis_label = "Date"
+  g.y_axis_label = "Weight"
+  labels[0] = ""
+  g.labels = labels
+  g.dataxy("Squat", data_points)
+  g.minimum_value = 0
+  g.write("#{exercise}.png")
+  puts "Exercise graph stored in #{exercise}.png".green
+  return true
+end
+
+# Public: Converts a day and month into an integer between 1 and 365,
+# or 1 to 366 if it is a leap year
+#
+# date - The date to be converted
+#
+# Returns the integer corresponding to the date, or -1 for any errors
+def date_to_int(date)
+  if !date.respond_to?('monday?')
+    puts "Invalid parameter"
+    return -1
+  end
+  days_in_months = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  if (date.year % 4 == 0 && date.year % 100 != 0) || date.year % 400 == 0
+    days_in_months[2] = 29
+  end
+  month = date.month
+  result = date.day
+  for index in 0..month-1
+    result += days_in_months[index]
+  end
+  return result
 end
 
 # Public: Delete a single workout
