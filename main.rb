@@ -963,6 +963,10 @@ def draw_exercise(exercise, weights, max_weight, stdin=$stdin)
       labels[date_ints[index] + add_to] = recent_first[index].strftime("%-m/%-d")
     end
   end
+  if data_points.length <= 1
+    puts "Not enough data for graph".red
+    return false
+  end
   g = Gruff::Line.new
   g.title = exercise.split.map(&:capitalize).join(' ')
   g.bold_title = true
@@ -1047,7 +1051,29 @@ end
 
 # Public: Displays the help text (user guide) for this program.
 def help
-  puts "help text"
+  help_text = "Syntax: 'ruby main.rb [command]'\n\n"\
+    "List of available commands:\n\n"\
+    "init\t\tInitializes the data files by creating a .fitness folder\n\n"\
+    "help/?\t\tDisplays this help text\n\n"
+  help_text += "start\t\tPrimary command, use this command to manipulate data: add, view, and delete data\n\n".green
+  help_text += "delete\t\tDeletes all the data, USE WITH CAUTION\n"
+  puts help_text
+end
+
+# Public: Deletes all user data. Use with caution
+def delete
+  if !(File.exist? '.fitness')
+    puts "Data not found in the current directory".red
+    return
+  else
+    print 'Are you sure you want to delete all the data? (y or n) '
+    delete_choice = stdin.gets.chomp
+    delete_choice.downcase!
+    if delete_choice.eql?('y') || delete_choice.eql?('yes')
+      FileUtils.remove_dir('./.fitness')
+      puts "Data successfully deleted".green
+    end
+  end
 end
 
 if __FILE__ == $0
@@ -1065,6 +1091,8 @@ if __FILE__ == $0
     else
       start
     end
+  elsif arg[0] == 'delete'
+    delete
   else
     puts "Not a proper command, try 'ruby main.rb help' for guidance".red
   end
